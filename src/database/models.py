@@ -64,9 +64,9 @@ class Photo(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     username = Column(String(MAX_USERNAME_LENGTH), nullable=False, unique=True)
-    email = Column(String(255), nullable=False, unique=True)
+    email = Column(String(255), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     role = Column(
         Enum(ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, name="user_role_types"),
@@ -75,8 +75,10 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     avatar = Column(String(255), nullable=True)
     is_active = Column(Boolean(), default=True)
-    refresh_token = Column(String(255), nullable=True)
 
+    refresh_tokens = relationship(
+        "RefreshToken", backref="user", cascade="all, delete-orphan"
+    )
     comments = relationship("Comment", backref="user", cascade="all, delete-orphan")
     ratings = relationship("Rating", backref="user", cascade="all, delete-orphan")
 
@@ -114,3 +116,14 @@ class Rating(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     score = Column(Integer, nullable=False)
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+    id = Column(Integer, primary_key=True)
+    refresh_token = Column(String(255), nullable=False, unique=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    session_id = Column(String(255), nullable=False, unique=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
