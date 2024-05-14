@@ -72,6 +72,7 @@ class User(Base):
     role = Column(
         Enum(ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, name="user_role_types"),
         nullable=False,
+        default=ROLE_STANDARD,
     )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     avatar = Column(String(255), nullable=True)
