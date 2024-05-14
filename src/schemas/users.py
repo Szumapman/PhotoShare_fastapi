@@ -49,7 +49,7 @@ class UserDb(BaseModel):
         from_attributes = True
 
 
-class UserCreate(BaseModel):
+class UserCreated(BaseModel):
     user: UserDb
     detail: str = "User successfully created"
 
