@@ -6,6 +6,7 @@ from src.repository.abstract import AbstractUser
 from src.schemas.users import UserIn
 from src.database.models import User, RefreshToken
 from src.services.avatar import AvatarProviderGravatar
+from src.conf.constant import TOKEN_NOT_FOUND
 
 
 class PostgresUser(AbstractUser):
@@ -14,6 +15,9 @@ class PostgresUser(AbstractUser):
 
     async def get_user_by_email(self, email: str) -> User:
         return self.db.query(User).filter(User.email == email).first()
+
+    async def get_user_by_username(self, username: str) -> User:
+        return self.db.query(User).filter(User.username == username).first()
 
     async def create_user(self, user: UserIn) -> User:
         avatar = AvatarProviderGravatar(user.email).get_avatar(255)
@@ -39,3 +43,19 @@ class PostgresUser(AbstractUser):
         )
         self.db.add(refresh_token)
         self.db.commit()
+
+    async def delete_refresh_token(
+        self, token: str, user_id: int
+    ) -> RefreshToken | str:
+        old_token = (
+            self.db.query(RefreshToken)
+            .filter(
+                RefreshToken.refresh_token == token, RefreshToken.user_id == user_id
+            )
+            .first()
+        )
+        if old_token is None:
+            return TOKEN_NOT_FOUND
+        self.db.delete(old_token)
+        self.db.commit()
+        return old_token
