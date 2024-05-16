@@ -6,18 +6,18 @@ from src.repository.abstract import AbstractUserRepo
 from src.schemas.users import UserIn
 from src.database.models import User, RefreshToken, LogoutAccessToken
 from src.services.avatar import AvatarProviderGravatar
-from src.conf.constant import TOKEN_NOT_FOUND, ACCESS_TOKEN_EXPIRE
+from src.conf.constant import TOKEN_NOT_FOUND, ACCESS_TOKEN_EXPIRE, TOKEN_DELETED
 
 
 class PostgresUserRepo(AbstractUserRepo):
     def __init__(self, db: Session):
         self.db = db
 
-    async def get_user_by_email(self, email: str) -> User:
-        return self.db.query(User).filter(User.email == email).first()
+    async def get_user_by_email(self, email: str) -> User | None:
+        return self.db.query(User).filter(email=email).first()
 
-    async def get_user_by_username(self, username: str) -> User:
-        return self.db.query(User).filter(User.username == username).first()
+    async def get_user_by_username(self, username: str) -> User | None:
+        return self.db.query(User).filter(username=username).first()
 
     async def create_user(self, user: UserIn) -> User:
         avatar = AvatarProviderGravatar(user.email).get_avatar(255)
@@ -44,28 +44,22 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.add(refresh_token)
         self.db.commit()
 
-    async def delete_refresh_token(
-        self, token: str, user_id: int
-    ) -> RefreshToken | str:
+    async def delete_refresh_token(self, token: str, user_id: int) -> str:
         old_token = (
             self.db.query(RefreshToken)
-            .filter(
-                RefreshToken.refresh_token == token, RefreshToken.user_id == user_id
-            )
+            .filter(refresh_token=token, user_id=user_id)
             .first()
         )
         if old_token is None:
             return TOKEN_NOT_FOUND
         self.db.delete(old_token)
         self.db.commit()
-        return old_token
+        return TOKEN_DELETED
 
     async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
         refresh_token = (
             self.db.query(RefreshToken)
-            .filter(
-                RefreshToken.session_id == session_id, RefreshToken.user_id == user.id
-            )
+            .filter(session_id=session_id, user_id=user.id)
             .first()
         )
         if refresh_token is None:
@@ -81,8 +75,6 @@ class PostgresUserRepo(AbstractUserRepo):
 
     async def is_user_logout(self, token: str) -> bool:
         return (
-            self.db.query(LogoutAccessToken)
-            .filter(LogoutAccessToken.logout_access_token == token)
-            .first()
+            self.db.query(LogoutAccessToken).filter(logout_access_token=token).first()
             is not None
         )
