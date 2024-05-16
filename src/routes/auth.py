@@ -12,8 +12,10 @@ from src.conf.constant import (
     AUTH,
     HTTP_401_UNAUTHORIZED_DETAILS,
     HTTP_404_NOT_FOUND_DETAILS,
+    HTTP_403_FORBIDDEN_DETAILS,
     USER_LOGOUT,
     USER_CREATED,
+    BANNED_USER,
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
@@ -28,6 +30,8 @@ async def __is_current_user_logged_in(current_user) -> User:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=current_user
         )
+    elif current_user in HTTP_403_FORBIDDEN_DETAILS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=current_user)
     return current_user
 
 
@@ -79,6 +83,11 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=BANNED_USER,
         )
     return await __set_tokens(user, user_repo)
 
