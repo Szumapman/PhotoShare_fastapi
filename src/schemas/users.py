@@ -18,6 +18,15 @@ class UserRoleEnum(str, Enum):
     standard = ROLE_STANDARD
 
 
+class UserRoleInEnum(str, Enum):
+    moderator = ROLE_MODERATOR
+    standard = ROLE_STANDARD
+
+
+class UserRoleIn(BaseModel):
+    role: UserRoleInEnum
+
+
 class UserIn(BaseModel):
     username: str = Field(
         min_length=3, max_length=MAX_USERNAME_LENGTH, default="user name"
@@ -60,3 +69,7 @@ class TokenModel(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+class ActiveStatus(BaseModel):
+    is_active: bool
