@@ -20,6 +20,7 @@ from src.conf.constant import (
     REFRESH_TOKEN,
     ACCESS_TOKEN_EXPIRE,
     REFRESH_TOKEN_EXPIRE,
+    BANNED_USER,
 )
 from src.database.models import LogoutAccessToken, User
 from src.repository.abstract import AbstractUserRepo
@@ -114,6 +115,8 @@ class Auth:
             user = pickle.loads(user)
         if await user_repo.is_user_logout(token):
             return LOG_IN_AGAIN
+        if not user.is_active:
+            return BANNED_USER
         return user
 
     async def get_session_id_from_token(self, token: str, user_email: str) -> str:
