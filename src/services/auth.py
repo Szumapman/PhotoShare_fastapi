@@ -15,30 +15,35 @@ from src.conf.constant import (
     REDIS_EXPIRE,
     INVALID_SCOPE,
     COULD_NOT_VALIDATE_CREDENTIALS,
+    LOG_IN_AGAIN,
     ACCESS_TOKEN,
     REFRESH_TOKEN,
+    ACCESS_TOKEN_EXPIRE,
+    REFRESH_TOKEN_EXPIRE,
 )
-from src.database.models import User
-from src.repository.abstract import AbstractUser
+from src.database.models import LogoutAccessToken, User
+from src.repository.abstract import AbstractUserRepo
 from src.database.dependencies import get_user_repository
 
 
 class Auth:
-    SECRET_KEY = settings.SECRET_KEY
-    ALGORITHM = settings.ALGORITHM
+    SECRET_KEY = settings.secret_key
+    ALGORITHM = settings.algorithm
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{API}{AUTH}/login")
     r = Redis(
-        host=settings.REDIS_HOST,
-        port=settings.REDIS_PORT,
-        password=settings.REDIS_PASSWORD,
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password,
         db=0,
     )
 
-    def __init__(self, user_repository: AbstractUser):
+    def __init__(self, user_repository: AbstractUserRepo):
         self.user_repository = user_repository
 
     async def create_access_token(
-        self, data: dict, expires_delta: timedelta = timedelta(minutes=15)
+        self,
+        data: dict,
+        expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE),
     ) -> (str, str):
         to_encode = data.copy()
         expire = datetime.utcnow() + expires_delta
@@ -57,7 +62,9 @@ class Auth:
         return encode_access_token, session_id
 
     async def create_refresh_token(
-        self, data: dict, expires_delta: timedelta = timedelta(days=7)
+        self,
+        data: dict,
+        expires_delta: timedelta = timedelta(days=REFRESH_TOKEN_EXPIRE),
     ) -> (str, datetime):
         to_encode = data.copy()
         expire = datetime.utcnow() + expires_delta
@@ -81,7 +88,11 @@ class Auth:
         except JWTError:
             return COULD_NOT_VALIDATE_CREDENTIALS
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme)) -> User:
+    async def get_current_user(
+        self,
+        token: str = Depends(oauth2_scheme),
+        user_repo: AbstractUserRepo = Depends(get_user_repository),
+    ) -> User | str:
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
             if payload["scope"] == ACCESS_TOKEN:
@@ -101,7 +112,22 @@ class Auth:
             await self.r.expire(f"user:{email}", REDIS_EXPIRE)
         else:
             user = pickle.loads(user)
+        if await user_repo.is_user_logout(token):
+            return LOG_IN_AGAIN
         return user
+
+    async def get_session_id_from_token(self, token: str, user_email: str) -> str:
+        try:
+            payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+            if payload["scope"] == ACCESS_TOKEN:
+                email: str = payload["sub"]
+                session_id = payload["session_id"]
+                if email is None or email != user_email or session_id is None:
+                    return COULD_NOT_VALIDATE_CREDENTIALS
+                return session_id
+            return COULD_NOT_VALIDATE_CREDENTIALS
+        except JWTError:
+            return COULD_NOT_VALIDATE_CREDENTIALS
 
 
 auth_service = Auth(get_user_repository())

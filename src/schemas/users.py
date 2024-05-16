@@ -19,9 +19,11 @@ class UserRoleEnum(str, Enum):
 
 
 class UserIn(BaseModel):
-    username: str = Field(min_length=3, max_length=MAX_USERNAME_LENGTH)
-    email: EmailStr = Field(min_length=150, unique=True)
-    password: str = Field(min_length=8, max_length=45)
+    username: str = Field(
+        min_length=3, max_length=MAX_USERNAME_LENGTH, default="user name"
+    )
+    email: EmailStr = Field(max_length=150, unique=True, default="user@example.com")
+    password: str = Field(min_length=8, max_length=45, default="password")
 
     @field_validator("password")
     def validate_password(cls, password: str) -> str:
@@ -49,9 +51,9 @@ class UserDb(BaseModel):
         from_attributes = True
 
 
-class UserCreated(BaseModel):
+class UserInfo(BaseModel):
     user: UserDb
-    detail: str = "User successfully created"
+    detail: str
 
 
 class TokenModel(BaseModel):

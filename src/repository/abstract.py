@@ -5,7 +5,7 @@ from src.schemas.users import UserDb, UserIn
 from src.database.models import User
 
 
-class AbstractUser(abc.ABC):
+class AbstractUserRepo(abc.ABC):
     @abc.abstractmethod
     async def get_user_by_email(self, email: str) -> User:
         pass
@@ -26,4 +26,12 @@ class AbstractUser(abc.ABC):
 
     @abc.abstractmethod
     async def delete_refresh_token(self, token: str, user_id: int):
+        pass
+
+    @abc.abstractmethod
+    async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
+        pass
+
+    @abc.abstractmethod
+    async def is_user_logout(self, token: str) -> bool:
         pass

@@ -1,15 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from src.repository.abstract import AbstractUser
+from src.repository.abstract import AbstractUserRepo
 from src.schemas.users import UserIn
-from src.database.models import User, RefreshToken
+from src.database.models import User, RefreshToken, LogoutAccessToken
 from src.services.avatar import AvatarProviderGravatar
-from src.conf.constant import TOKEN_NOT_FOUND
+from src.conf.constant import TOKEN_NOT_FOUND, ACCESS_TOKEN_EXPIRE
 
 
-class PostgresUser(AbstractUser):
+class PostgresUserRepo(AbstractUserRepo):
     def __init__(self, db: Session):
         self.db = db
 
@@ -59,3 +59,30 @@ class PostgresUser(AbstractUser):
         self.db.delete(old_token)
         self.db.commit()
         return old_token
+
+    async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
+        refresh_token = (
+            self.db.query(RefreshToken)
+            .filter(
+                RefreshToken.session_id == session_id, RefreshToken.user_id == user.id
+            )
+            .first()
+        )
+        if refresh_token is None:
+            return TOKEN_NOT_FOUND
+        self.db.delete(refresh_token)
+        logout_access_token = LogoutAccessToken(
+            logout_access_token=token,
+            expires_at=datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE),
+        )
+        self.db.add(logout_access_token)
+        self.db.commit()
+        return user
+
+    async def is_user_logout(self, token: str) -> bool:
+        return (
+            self.db.query(LogoutAccessToken)
+            .filter(LogoutAccessToken.logout_access_token == token)
+            .first()
+            is not None
+        )
