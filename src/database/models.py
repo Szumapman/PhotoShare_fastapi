@@ -123,9 +123,16 @@ class Rating(Base):
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
     id = Column(Integer, primary_key=True)
-    refresh_token = Column(String(255), nullable=False, unique=True, index=True)
+    refresh_token = Column(String(350), nullable=False, unique=True, index=True)
     user_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    session_id = Column(String(255), nullable=False, unique=True)
+    session_id = Column(String(150), nullable=False, unique=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+
+class LogoutAccessToken(Base):
+    __tablename__ = "logout_access_tokens"
+    id = Column(Integer, primary_key=True)
+    logout_access_token = Column(String(350), nullable=False, unique=True, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False)
