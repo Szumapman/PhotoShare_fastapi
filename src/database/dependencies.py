@@ -1,7 +1,7 @@
 from src.database.db import get_db
-from src.repository.abstract import AbstractUser
-from src.repository.users import PostgresUser
+from src.repository.abstract import AbstractUserRepo
+from src.repository.users import PostgresUserRepo
 
 
-def get_user_repository() -> AbstractUser:
-    return PostgresUser(next(get_db()))
+def get_user_repository() -> AbstractUserRepo:
+    return PostgresUserRepo(next(get_db()))
