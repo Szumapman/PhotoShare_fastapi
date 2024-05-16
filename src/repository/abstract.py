@@ -1,7 +1,7 @@
 import abc
 from datetime import datetime
 
-from src.schemas.users import UserDb, UserIn
+from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User
 
 
@@ -34,4 +34,14 @@ class AbstractUserRepo(abc.ABC):
 
     @abc.abstractmethod
     async def is_user_logout(self, token: str) -> bool:
+        pass
+
+    @abc.abstractmethod
+    async def set_user_active_status(
+        self, user_id: int, active_status: ActiveStatus, current_user: User
+    ) -> User | str:
+        pass
+
+    @abc.abstractmethod
+    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User | str:
         pass

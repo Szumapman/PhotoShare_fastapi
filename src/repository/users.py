@@ -3,10 +3,18 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from src.repository.abstract import AbstractUserRepo
-from src.schemas.users import UserIn
+from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User, RefreshToken, LogoutAccessToken
 from src.services.avatar import AvatarProviderGravatar
-from src.conf.constant import TOKEN_NOT_FOUND, ACCESS_TOKEN_EXPIRE, TOKEN_DELETED
+from src.conf.constant import (
+    TOKEN_NOT_FOUND,
+    ACCESS_TOKEN_EXPIRE,
+    TOKEN_DELETED,
+    USER_NOT_FOUND,
+    ROLE_ADMIN,
+    ROLE_MODERATOR,
+    FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
+)
 
 
 class PostgresUserRepo(AbstractUserRepo):
@@ -14,10 +22,13 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db = db
 
     async def get_user_by_email(self, email: str) -> User | None:
-        return self.db.query(User).filter(email=email).first()
+        return self.db.query(User).filter(User.email == email).first()
 
     async def get_user_by_username(self, username: str) -> User | None:
-        return self.db.query(User).filter(username=username).first()
+        return self.db.query(User).filter(User.username == username).first()
+
+    async def get_user_by_id(self, user_id: int) -> User | None:
+        return self.db.query(User).filter(User.id == user_id).first()
 
     async def create_user(self, user: UserIn) -> User:
         avatar = AvatarProviderGravatar(user.email).get_avatar(255)
@@ -47,7 +58,9 @@ class PostgresUserRepo(AbstractUserRepo):
     async def delete_refresh_token(self, token: str, user_id: int) -> str:
         old_token = (
             self.db.query(RefreshToken)
-            .filter(refresh_token=token, user_id=user_id)
+            .filter(
+                RefreshToken.refresh_token == token, RefreshToken.user_id == user_id
+            )
             .first()
         )
         if old_token is None:
@@ -59,7 +72,9 @@ class PostgresUserRepo(AbstractUserRepo):
     async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
         refresh_token = (
             self.db.query(RefreshToken)
-            .filter(session_id=session_id, user_id=user.id)
+            .filter(
+                RefreshToken.session_id == session_id, RefreshToken.user_id == user.id
+            )
             .first()
         )
         if refresh_token is None:
@@ -75,6 +90,30 @@ class PostgresUserRepo(AbstractUserRepo):
 
     async def is_user_logout(self, token: str) -> bool:
         return (
-            self.db.query(LogoutAccessToken).filter(logout_access_token=token).first()
+            self.db.query(LogoutAccessToken)
+            .filter(LogoutAccessToken.logout_access_token == token)
+            .first()
             is not None
         )
+
+    async def set_user_active_status(
+        self, user_id: int, active_status: ActiveStatus, current_user: User
+    ) -> User | str:
+        user = await self.get_user_by_id(user_id)
+        if user is None:
+            return USER_NOT_FOUND
+        if user.role == ROLE_ADMIN and current_user.role == ROLE_MODERATOR:
+            return FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT
+        user.is_active = active_status.is_active
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User | str:
+        user = await self.get_user_by_id(user_id)
+        if user is None:
+            return USER_NOT_FOUND
+        user.role = role.role
+        self.db.commit()
+        self.db.refresh(user)
+        return user
