@@ -15,7 +15,7 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def create_user(self, user: UserIn) -> User:
+    async def create_user(self, user: UserIn, avatar: str) -> User:
         pass
 
     @abc.abstractmethod
