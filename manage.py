@@ -1,15 +1,16 @@
+import asyncio
 import re
 import argparse
 import sys
+from datetime import datetime
 
 from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit import prompt
 from validator_collection import validators
-from sqlalchemy.orm import Session
 
 from src.database.db import SessionLocal
 from src.database.dependencies import get_avatar_provider
-from src.database.models import User
+from src.database.models import User, RefreshToken, LogoutAccessToken
 from src.services.pasword import get_password_hash
 from src.conf.constant import MAX_USERNAME_LENGTH, ROLE_ADMIN
 
@@ -44,7 +45,7 @@ class PasswordValidator(Validator):
             )
 
 
-def get_data():
+def __get_data():
     print("Create a new admin user. ")
     username = prompt("username: ", validator=UserNameValidator())
     while True:
@@ -69,38 +70,74 @@ def get_data():
     return username, email, password1
 
 
+async def __add_admin_to_db(username, email, password):
+    avatar_provider = get_avatar_provider()
+    avatar = avatar_provider.get_avatar(email, 255)
+    db = SessionLocal()
+    user = User(
+        username=username,
+        email=email,
+        password=get_password_hash(password),
+        avatar=avatar,
+        role=ROLE_ADMIN,
+    )
+    db.add(user)
+    db.commit()
+
+
+async def __delete_exp_tokens(token_type: str):
+    if token_type == "refresh_token":
+        token_to_clean = RefreshToken
+    elif token_type == "access_token":
+        token_to_clean = LogoutAccessToken
+    else:
+        raise ValueError("token_type must be either 'refresh_token' or 'access_token'")
+    db = SessionLocal()
+    tokens_to_delete = (
+        db.query(token_to_clean)
+        .filter(token_to_clean.expires_at < datetime.utcnow())
+        .all()
+    )
+    for token in tokens_to_delete:
+        db.delete(token)
+    db.commit()
+
+
 def create_admin():
     while True:
         try:
-            username, email, password = get_data()
-            avatar_provider = get_avatar_provider()
-            avatar = avatar_provider.get_avatar(email, 255)
-            db = SessionLocal()
-            # db = get_db()
-            user = User(
-                username=username,
-                email=email,
-                password=get_password_hash(password),
-                avatar=avatar,
-                role=ROLE_ADMIN,
-            )
-            db.add(user)
-            db.commit()
+            username, email, password = __get_data()
+            asyncio.run(__add_admin_to_db(username, email, password))
         except Exception as e:
             print(e)
             print("Try again.")
             continue
-        print("Admin user created.")
         break
+    print("Admin user created.")
+
+
+def clean_access_tokens():
+    try:
+        asyncio.run(__delete_exp_tokens("access_token"))
+    except Exception as e:
+        print(e)
+
+
+def clean_refresh_tokens():
+    try:
+        asyncio.run(__delete_exp_tokens("refresh_token"))
+    except Exception as e:
+        print(e)
 
 
 CALLABLE_FUNCTIONS = {
     "create_admin": create_admin,
-    "clear_token": ...,
+    "clean_access_tokens": clean_access_tokens,
+    "clean_refresh_tokens": clean_refresh_tokens,
 }
 
 
-def parse_arg():
+def __parse_arg():
     parser = argparse.ArgumentParser(
         description="Launch the manage.py file with the name of the function you want to use as an argument."
     )
@@ -119,6 +156,6 @@ def parse_arg():
 
 
 if __name__ == "__main__":
-    arg = parse_arg()
+    arg = __parse_arg()
     cmd = CALLABLE_FUNCTIONS[arg]
     cmd()
