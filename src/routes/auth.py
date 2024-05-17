@@ -6,8 +6,9 @@ from fastapi.security import (
 )
 
 from src.repository.abstract import AbstractUserRepo
-from src.database.dependencies import get_user_repository
+from src.database.dependencies import get_user_repository, get_avatar_provider
 from src.services.auth import auth_service
+from src.services.avatar import AbstractAvatarProvider
 from src.conf.constant import (
     AUTH,
     HTTP_401_UNAUTHORIZED_DETAILS,
@@ -48,7 +49,9 @@ async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
 
 @router.post("/signup", response_model=UserInfo, status_code=status.HTTP_201_CREATED)
 async def signup(
-    user: UserIn, user_repo: AbstractUserRepo = Depends(get_user_repository)
+    user: UserIn,
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+    avatar_provider: AbstractAvatarProvider = Depends(get_avatar_provider),
 ):
     if await user_repo.get_user_by_email(user.email):
         raise HTTPException(
@@ -61,7 +64,8 @@ async def signup(
             detail="Account with this username already exists",
         )
     user.password = get_password_hash(user.password)
-    user = await user_repo.create_user(user)
+    avatar = avatar_provider.get_avatar(user.email, 255)
+    user = await user_repo.create_user(user, avatar)
     return UserInfo(user=UserDb.from_orm(user), detail=USER_CREATED)
 
 
