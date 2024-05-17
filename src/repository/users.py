@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from src.repository.abstract import AbstractUserRepo
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.services.avatar import AvatarProviderGravatar
 from src.conf.constant import (
     TOKEN_NOT_FOUND,
     ACCESS_TOKEN_EXPIRE,
@@ -30,8 +29,7 @@ class PostgresUserRepo(AbstractUserRepo):
     async def get_user_by_id(self, user_id: int) -> User | None:
         return self.db.query(User).filter(User.id == user_id).first()
 
-    async def create_user(self, user: UserIn) -> User:
-        avatar = AvatarProviderGravatar(user.email).get_avatar(255)
+    async def create_user(self, user: UserIn, avatar: str) -> User:
         new_user = User(
             username=user.username,
             email=user.email,
