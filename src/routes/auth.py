@@ -17,6 +17,7 @@ from src.conf.constant import (
     USER_LOGOUT,
     USER_CREATED,
     BANNED_USER,
+    INCORRECT_USERNAME_OR_PASSWORD,
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
@@ -66,7 +67,7 @@ async def signup(
     user.password = get_password_hash(user.password)
     avatar = avatar_provider.get_avatar(user.email, 255)
     user = await user_repo.create_user(user, avatar)
-    return UserInfo(user=UserDb.from_orm(user), detail=USER_CREATED)
+    return UserInfo(user=UserDb.model_validate(user), detail=USER_CREATED)
 
 
 @router.post("/login", response_model=TokenModel)
@@ -80,13 +81,13 @@ async def login(
         # incorrect email
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail=INCORRECT_USERNAME_OR_PASSWORD,
         )
     if not verify_password(body.password, user.password):
         # incorrect password
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail=INCORRECT_USERNAME_OR_PASSWORD,
         )
     if not user.is_active:
         raise HTTPException(
@@ -135,6 +136,7 @@ async def logout(
         if answer in HTTP_404_NOT_FOUND_DETAILS:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
         user = answer
+        await auth_service.delete_user_from_redis(user.email)
         return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
 
 
