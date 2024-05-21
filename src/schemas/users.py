@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
 from src.conf.constant import (
     MAX_USERNAME_LENGTH,
@@ -31,7 +31,7 @@ class UserIn(BaseModel):
     username: str = Field(
         min_length=3, max_length=MAX_USERNAME_LENGTH, default="user name"
     )
-    email: EmailStr = Field(max_length=150, unique=True, default="user@example.com")
+    email: EmailStr = Field(max_length=150, default="user@example.com")
     password: str = Field(min_length=8, max_length=45, default="password")
 
     @field_validator("password")
@@ -48,6 +48,8 @@ class UserIn(BaseModel):
 
 
 class UserDb(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     email: EmailStr
@@ -55,9 +57,6 @@ class UserDb(BaseModel):
     created_at: datetime
     avatar: str
     is_active: bool
-
-    class Config:
-        from_attributes = True
 
 
 class UserInfo(BaseModel):

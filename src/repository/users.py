@@ -91,7 +91,6 @@ class PostgresUserRepo(AbstractUserRepo):
             self.db.query(LogoutAccessToken)
             .filter(LogoutAccessToken.logout_access_token == token)
             .first()
-            is not None
         )
 
     async def set_user_active_status(
