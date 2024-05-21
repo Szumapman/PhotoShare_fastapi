@@ -21,6 +21,7 @@ USER_LOGOUT = "User logged out"
 INVALID_SCOPE = "Invalid scope"
 COULD_NOT_VALIDATE_CREDENTIALS = "Could not validate credentials"
 LOG_IN_AGAIN = "You need to log in again"
+INCORRECT_USERNAME_OR_PASSWORD = "Incorrect username or password"
 
 HTTP_401_UNAUTHORIZED_DETAILS = [
     INVALID_SCOPE,
