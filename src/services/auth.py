@@ -22,7 +22,7 @@ from src.conf.constant import (
     REFRESH_TOKEN_EXPIRE,
     BANNED_USER,
 )
-from src.database.models import LogoutAccessToken, User
+from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.database.dependencies import get_user_repository
 
@@ -37,9 +37,6 @@ class Auth:
         password=settings.redis_password,
         db=0,
     )
-
-    def __init__(self, user_repository: AbstractUserRepo):
-        self.user_repository = user_repository
 
     async def create_access_token(
         self,
@@ -106,9 +103,9 @@ class Auth:
             return COULD_NOT_VALIDATE_CREDENTIALS
         user = await self.r.get(f"user:{email}")
         if user is None:
-            user = await self.user_repository.get_user_by_email(email)
+            user = await user_repo.get_user_by_email(email)
             if user is None:
-                return COULD_NOT_VALIDATE_CREDENTIALS
+                return COULD_NOT_VALIDATE_CREDENTIALS + f", email: {email}"
             await self.r.set(f"user:{email}", pickle.dumps(user))
             await self.r.expire(f"user:{email}", REDIS_EXPIRE)
         else:
@@ -132,5 +129,8 @@ class Auth:
         except JWTError:
             return COULD_NOT_VALIDATE_CREDENTIALS
 
+    async def delete_user_from_redis(self, email: str):
+        await self.r.delete(f"user:{email}")
 
-auth_service = Auth(get_user_repository())
+
+auth_service = Auth()
