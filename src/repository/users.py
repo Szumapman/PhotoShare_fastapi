@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List, Type
 
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,9 @@ class PostgresUserRepo(AbstractUserRepo):
 
     async def get_user_by_id(self, user_id: int) -> User | None:
         return self.db.query(User).filter(User.id == user_id).first()
+
+    async def get_users(self) -> list[Type[User]]:
+        return self.db.query(User).all()
 
     async def create_user(self, user: UserIn, avatar: str) -> User:
         new_user = User(
