@@ -97,6 +97,26 @@ async def login(
     return await __set_tokens(user, user_repo)
 
 
+@router.post("/logout", response_model=UserInfo)
+async def logout(
+    current_user: User = Depends(auth_service.get_current_user),
+    credentials: HTTPAuthorizationCredentials = Security(security),
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+):
+    if await __is_current_user_logged_in(current_user):
+        token = credentials.credentials
+        answer = await auth_service.get_session_id_from_token(token, current_user.email)
+        if answer in HTTP_401_UNAUTHORIZED_DETAILS:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=answer)
+        session_id = answer
+        answer = await user_repo.logout_user(token, session_id, current_user)
+        if answer in HTTP_404_NOT_FOUND_DETAILS:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
+        user = answer
+        await auth_service.delete_user_from_redis(user.email)
+        return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
+
+
 @router.get("/refresh_token", response_model=TokenModel)
 async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
@@ -118,29 +138,3 @@ async def refresh_token(
     if answer in HTTP_404_NOT_FOUND_DETAILS:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
     return await __set_tokens(user, user_repo)
-
-
-@router.post("/logout", response_model=UserInfo)
-async def logout(
-    current_user: User = Depends(auth_service.get_current_user),
-    credentials: HTTPAuthorizationCredentials = Security(security),
-    user_repo: AbstractUserRepo = Depends(get_user_repository),
-):
-    if await __is_current_user_logged_in(current_user):
-        token = credentials.credentials
-        answer = await auth_service.get_session_id_from_token(token, current_user.email)
-        if answer in HTTP_401_UNAUTHORIZED_DETAILS:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=answer)
-        session_id = answer
-        answer = await user_repo.logout_user(token, session_id, current_user)
-        if answer in HTTP_404_NOT_FOUND_DETAILS:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
-        user = answer
-        await auth_service.delete_user_from_redis(user.email)
-        return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
-
-
-@router.get("/secret")
-async def read_secret(current_user: User = Depends(auth_service.get_current_user)):
-    if await __is_current_user_logged_in(current_user):
-        return {"message": "secret", "owner": current_user.email}

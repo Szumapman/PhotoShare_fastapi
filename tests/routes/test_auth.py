@@ -113,13 +113,3 @@ def test_refresh_token_success(client, tokens):
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
         assert data["token_type"] == "bearer"
-
-
-def test_secret(client, tokens):
-    with patch.object(auth_service, "r") as mock_redis:
-        mock_redis.get.return_value = None
-        response = client.get(
-            f"{API}{AUTH}/secret",
-            headers={"Authorization": f"Bearer {tokens['access_token']}"},
-        )
-        assert response.status_code == status.HTTP_200_OK, response.text
