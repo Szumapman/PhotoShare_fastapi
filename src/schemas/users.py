@@ -48,14 +48,27 @@ class UserIn(BaseModel):
 
 
 class UserDb(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
     username: str
     email: EmailStr
     role: UserRoleEnum
     created_at: datetime
     avatar: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserPublic(BaseModel):
+    id: int
+    username: str
+    created_at: datetime
+    avatar: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserModeratorView(UserPublic):
     is_active: bool
 
 
