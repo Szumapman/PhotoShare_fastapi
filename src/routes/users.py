@@ -10,8 +10,16 @@ from src.conf.constant import (
     HTTP_403_FORBIDDEN_DETAILS,
     FORBIDDEN_FOR_USER,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
+    USER_NOT_FOUND,
 )
-from src.schemas.users import UserDb, ActiveStatus, UserInfo, UserRoleIn
+from src.schemas.users import (
+    UserDb,
+    ActiveStatus,
+    UserInfo,
+    UserRoleIn,
+    UserPublic,
+    UserModeratorView,
+)
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.routes.auth import __is_current_user_logged_in
@@ -20,12 +28,40 @@ from src.routes.auth import __is_current_user_logged_in
 router = APIRouter(prefix=USERS, tags=["users"])
 
 
-@router.get("/me", response_model=UserDb)
-async def get_current_user(
+@router.get(
+    "/", response_model=list[UserDb] | list[UserModeratorView] | list[UserPublic]
+)
+async def get_users(
     current_user: User = Depends(auth_service.get_current_user),
-) -> UserDb:
-    if __is_current_user_logged_in(current_user):
-        return UserDb.from_orm(current_user)
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+):
+    if await __is_current_user_logged_in(current_user):
+        users = await user_repo.get_users()
+        if current_user.role == ROLE_ADMIN:
+            return [UserDb.from_orm(user) for user in users]
+        elif current_user.role == ROLE_MODERATOR:
+            return [UserModeratorView.from_orm(user) for user in users]
+        return [UserPublic.from_orm(user) for user in users]
+
+
+@router.get("/{user_id}", response_model=UserDb | UserModeratorView | UserPublic)
+async def get_user(
+    user_id: int,
+    current_user: User = Depends(auth_service.get_current_user),
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+):
+    if await __is_current_user_logged_in(current_user):
+        user = await user_repo.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=USER_NOT_FOUND,
+            )
+        if current_user.role == ROLE_ADMIN or current_user.id == user_id:
+            return UserDb.from_orm(user)
+        elif current_user.role == ROLE_MODERATOR:
+            return UserModeratorView.from_orm(user)
+        return UserPublic.from_orm(user)
 
 
 @router.patch("/active_status/{user_id}", response_model=UserInfo)
