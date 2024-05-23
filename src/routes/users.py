@@ -11,9 +11,14 @@ from src.conf.constant import (
     FORBIDDEN_FOR_USER,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
     USER_NOT_FOUND,
+    USERNAME_EXISTS,
+    EMAIL_EXISTS,
+    USER_UPDATE,
+    USER_DELETE,
 )
 from src.schemas.users import (
     UserDb,
+    UserIn,
     ActiveStatus,
     UserInfo,
     UserRoleIn,
@@ -23,7 +28,7 @@ from src.schemas.users import (
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.routes.auth import __is_current_user_logged_in
-
+from src.services.pasword import get_password_hash
 
 router = APIRouter(prefix=USERS, tags=["users"])
 
@@ -62,6 +67,48 @@ async def get_user(
         elif current_user.role == ROLE_MODERATOR:
             return UserModeratorView.from_orm(user)
         return UserPublic.from_orm(user)
+
+
+@router.patch("/", response_model=UserInfo)
+async def update_user(
+    new_user_data: UserIn,
+    current_user: User = Depends(auth_service.get_current_user),
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+):
+    if await __is_current_user_logged_in(current_user):
+        if new_user_data.username != current_user.username:
+            print(new_user_data.username, current_user.username)
+            if await user_repo.get_user_by_username(new_user_data.username):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT, detail=USERNAME_EXISTS
+                )
+        elif new_user_data.email != current_user.email:
+            if await user_repo.get_user_by_email(new_user_data.email):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT, detail=EMAIL_EXISTS
+                )
+        new_user_data.password = get_password_hash(new_user_data.password)
+        user = await user_repo.update_user(new_user_data, current_user.id)
+        await auth_service.update_user_in_redis(user.email, user)
+        return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)
+
+
+@router.delete("/{user_id}", response_model=UserInfo)
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(auth_service.get_current_user),
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+):
+    if await __is_current_user_logged_in(current_user):
+        if current_user.role == ROLE_ADMIN or current_user.id == user_id:
+            user = await user_repo.delete_user(user_id)
+            if user in HTTP_404_NOT_FOUND_DETAILS:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=user,
+                )
+            await auth_service.delete_user_from_redis(user.email)
+            return UserInfo(user=UserDb.model_validate(user), detail=USER_DELETE)
 
 
 @router.patch("/active_status/{user_id}", response_model=UserInfo)

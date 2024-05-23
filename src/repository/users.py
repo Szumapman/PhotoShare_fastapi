@@ -3,6 +3,7 @@ from typing import List, Type
 
 from sqlalchemy.orm import Session
 
+from src.database import db
 from src.repository.abstract import AbstractUserRepo
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User, RefreshToken, LogoutAccessToken
@@ -44,6 +45,23 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.commit()
         self.db.refresh(new_user)
         return new_user
+
+    async def update_user(self, new_user_data: UserIn, user_id: int) -> User:
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.username = new_user_data.username
+        user.email = new_user_data.email
+        user.password = new_user_data.password
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    async def delete_user(self, user_id: int) -> User | str:
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            return USER_NOT_FOUND
+        self.db.delete(user)
+        self.db.commit()
+        return user
 
     async def add_refresh_token(
         self, user: User, token: str | None, expiration_date: datetime, session_id: str

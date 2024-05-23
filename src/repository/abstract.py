@@ -27,6 +27,14 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def update_user(self, new_user_data: UserIn, user_id: int) -> User:
+        pass
+
+    @abc.abstractmethod
+    async def delete_user(self, user_id: int) -> User:
+        pass
+
+    @abc.abstractmethod
     async def add_refresh_token(
         self, user: User, token: str | None, expiration_date: datetime, session_id: str
     ) -> None:

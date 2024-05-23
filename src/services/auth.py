@@ -38,6 +38,10 @@ class Auth:
         db=0,
     )
 
+    async def update_user_in_redis(self, email: str, user: User):
+        await self.r.set(f"user:{email}", pickle.dumps(user))
+        await self.r.expire(f"user:{email}", REDIS_EXPIRE)
+
     async def create_access_token(
         self,
         data: dict,
@@ -106,8 +110,7 @@ class Auth:
             user = await user_repo.get_user_by_email(email)
             if user is None:
                 return COULD_NOT_VALIDATE_CREDENTIALS + f", email: {email}"
-            await self.r.set(f"user:{email}", pickle.dumps(user))
-            await self.r.expire(f"user:{email}", REDIS_EXPIRE)
+            await self.update_user_in_redis(email, user)
         else:
             user = pickle.loads(user)
         if await user_repo.is_user_logout(token):
