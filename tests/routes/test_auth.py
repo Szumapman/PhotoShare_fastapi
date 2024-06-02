@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch
 from datetime import datetime
 
 import pytest
@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from fastapi import status
 
 from src.services.auth import auth_service
-from src.database.models import User
+from src.database.models import User, RefreshToken
 from src.schemas.users import UserInfo, UserDb, UserIn
 from src.conf.constant import (
     USER_CREATED,
@@ -17,7 +17,12 @@ from src.conf.constant import (
     ROLE_STANDARD,
     INCORRECT_USERNAME_OR_PASSWORD,
     BANNED_USER,
+    COULD_NOT_VALIDATE_CREDENTIALS,
+    INVALID_SCOPE,
+    TOKEN_NOT_FOUND,
 )
+from tests.routes.conftest import EMAIL_STANDARD
+from src.repository.users import PostgresUserRepo
 
 
 def test_signup_success(client, user_in_standard_json, user_db_standard):
@@ -113,3 +118,43 @@ def test_refresh_token_success(client, tokens):
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
         assert data["token_type"] == "bearer"
+
+
+def test_refresh_token_wrong_token(client, tokens):
+    wrong_refresh_token = tokens["refresh_token"] + "_wrong"
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client.get(
+            f"{API}{AUTH}/refresh_token",
+            headers={"Authorization": f"Bearer {wrong_refresh_token}"},
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED, response.text
+        data = response.json()
+        assert data["detail"] == COULD_NOT_VALIDATE_CREDENTIALS
+
+        response = client.get(
+            f"{API}{AUTH}/refresh_token",
+            headers={"Authorization": f"Bearer {tokens['access_token']}"},
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED, response.text
+        data = response.json()
+        assert data["detail"] == INVALID_SCOPE
+
+
+def test_refresh_token_no_user(
+    session,
+    client,
+    tokens,
+):
+    user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
+    session.delete(user)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client.get(
+            f"{API}{AUTH}/refresh_token",
+            headers={"Authorization": f"Bearer {tokens['refresh_token']}"},
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
+        data = response.json()
+        assert data["detail"] == "Account connected with this token does not found"
