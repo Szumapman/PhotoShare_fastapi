@@ -6,7 +6,11 @@ from fastapi.security import (
 )
 
 from src.repository.abstract import AbstractUserRepo
-from src.database.dependencies import get_user_repository, get_avatar_provider
+from src.database.dependencies import (
+    get_user_repository,
+    get_avatar_provider,
+    get_password_handler,
+)
 from src.services.auth import auth_service
 from src.services.avatar import AbstractAvatarProvider
 from src.conf.constant import (
@@ -21,7 +25,6 @@ from src.conf.constant import (
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
-from src.services.pasword import get_password_hash, verify_password
 
 router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
@@ -64,7 +67,7 @@ async def signup(
             status_code=status.HTTP_409_CONFLICT,
             detail="Account with this username already exists",
         )
-    user.password = get_password_hash(user.password)
+    user.password = get_password_handler().get_password_hash(user.password)
     avatar = avatar_provider.get_avatar(user.email, 255)
     user = await user_repo.create_user(user, avatar)
     return UserInfo(user=UserDb.model_validate(user), detail=USER_CREATED)
@@ -83,7 +86,7 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INCORRECT_USERNAME_OR_PASSWORD,
         )
-    if not verify_password(body.password, user.password):
+    if not get_password_handler().verify_password(body.password, user.password):
         # incorrect password
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

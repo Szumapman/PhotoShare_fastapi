@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 
 from src.services.auth import auth_service
-from src.database.dependencies import get_user_repository
+from src.database.dependencies import get_user_repository, get_password_handler
 from src.conf.constant import (
     USERS,
     ROLE_ADMIN,
@@ -28,7 +28,6 @@ from src.schemas.users import (
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.routes.auth import __is_current_user_logged_in
-from src.services.pasword import get_password_hash
 
 router = APIRouter(prefix=USERS, tags=["users"])
 
@@ -87,7 +86,9 @@ async def update_user(
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT, detail=EMAIL_EXISTS
                 )
-        new_user_data.password = get_password_hash(new_user_data.password)
+        new_user_data.password = get_password_handler().get_password_hash(
+            new_user_data.password
+        )
         user = await user_repo.update_user(new_user_data, current_user.id)
         await auth_service.update_user_in_redis(user.email, user)
         return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)

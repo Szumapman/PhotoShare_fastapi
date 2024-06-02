@@ -9,9 +9,8 @@ from prompt_toolkit import prompt
 from validator_collection import validators
 
 from src.database.db import SessionLocal
-from src.database.dependencies import get_avatar_provider
+from src.database.dependencies import get_avatar_provider, get_password_handler
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.services.pasword import get_password_hash
 from src.conf.constant import MAX_USERNAME_LENGTH, ROLE_ADMIN
 
 
@@ -77,7 +76,7 @@ async def __add_admin_to_db(username, email, password):
     user = User(
         username=username,
         email=email,
-        password=get_password_hash(password),
+        password=get_password_handler().get_password_hash(password),
         avatar=avatar,
         role=ROLE_ADMIN,
     )
