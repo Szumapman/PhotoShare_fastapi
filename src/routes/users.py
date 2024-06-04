@@ -27,6 +27,7 @@ from src.schemas.users import (
 )
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
+from src.services.abstract import AbstractPasswordHandler
 from src.routes.auth import __is_current_user_logged_in
 
 router = APIRouter(prefix=USERS, tags=["users"])
@@ -73,6 +74,7 @@ async def update_user(
     new_user_data: UserIn,
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
+    password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
     if await __is_current_user_logged_in(current_user):
         if new_user_data.username != current_user.username:
@@ -86,7 +88,7 @@ async def update_user(
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT, detail=EMAIL_EXISTS
                 )
-        new_user_data.password = get_password_handler().get_password_hash(
+        new_user_data.password = password_handler.get_password_hash(
             new_user_data.password
         )
         user = await user_repo.update_user(new_user_data, current_user.id)

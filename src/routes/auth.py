@@ -12,6 +12,7 @@ from src.database.dependencies import (
     get_password_handler,
 )
 from src.services.auth import auth_service
+from src.services.abstract import AbstractPasswordHandler
 from src.services.avatar import AbstractAvatarProvider
 from src.conf.constant import (
     AUTH,
@@ -55,6 +56,7 @@ async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
 async def signup(
     user: UserIn,
     user_repo: AbstractUserRepo = Depends(get_user_repository),
+    password_handler: AbstractPasswordHandler = Depends(get_password_handler),
     avatar_provider: AbstractAvatarProvider = Depends(get_avatar_provider),
 ):
     if await user_repo.get_user_by_email(user.email):
@@ -67,7 +69,7 @@ async def signup(
             status_code=status.HTTP_409_CONFLICT,
             detail="Account with this username already exists",
         )
-    user.password = get_password_handler().get_password_hash(user.password)
+    user.password = password_handler.get_password_hash(user.password)
     avatar = avatar_provider.get_avatar(user.email, 255)
     user = await user_repo.create_user(user, avatar)
     return UserInfo(user=UserDb.model_validate(user), detail=USER_CREATED)
@@ -77,6 +79,7 @@ async def signup(
 async def login(
     body: OAuth2PasswordRequestForm = Depends(),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
+    password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
     user = await user_repo.get_user_by_email(body.username)
     # because of security reasons we don't want to tell the user if the email or password is incorrect
@@ -86,7 +89,7 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INCORRECT_USERNAME_OR_PASSWORD,
         )
-    if not get_password_handler().verify_password(body.password, user.password):
+    if not password_handler.verify_password(body.password, user.password):
         # incorrect password
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
