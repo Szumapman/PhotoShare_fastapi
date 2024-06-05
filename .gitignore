@@ -154,3 +154,6 @@ cython_debug/
 # database
 postgres-data/
 test.db
+
+# logs
+logs/*
