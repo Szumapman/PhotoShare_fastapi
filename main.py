@@ -2,12 +2,15 @@ import uvicorn
 from fastapi import FastAPI
 
 from src.routes import auth, users
+from src.routes import photos
 from src.conf.constant import API
+
 
 app = FastAPI()
 
 app.include_router(auth.router, prefix=API)
 app.include_router(users.router, prefix=API)
+app.include_router(photos.router, prefix=API)
 
 
 if __name__ == "__main__":
