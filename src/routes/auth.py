@@ -31,14 +31,14 @@ router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
 
 
-async def __is_current_user_logged_in(current_user) -> User:
+async def is_current_user_logged_in(current_user) -> bool:
     if current_user in HTTP_401_UNAUTHORIZED_DETAILS:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=current_user
         )
     elif current_user in HTTP_403_FORBIDDEN_DETAILS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=current_user)
-    return current_user
+    return True
 
 
 async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
@@ -109,7 +109,7 @@ async def logout(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         token = credentials.credentials
         answer = await auth_service.get_session_id_from_token(token, current_user.email)
         if answer in HTTP_401_UNAUTHORIZED_DETAILS:

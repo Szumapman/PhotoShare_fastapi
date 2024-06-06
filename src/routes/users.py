@@ -28,7 +28,7 @@ from src.schemas.users import (
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.services.abstract import AbstractPasswordHandler
-from src.routes.auth import __is_current_user_logged_in
+from src.routes.auth import is_current_user_logged_in
 
 router = APIRouter(prefix=USERS, tags=["users"])
 
@@ -40,7 +40,7 @@ async def get_users(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         users = await user_repo.get_users()
         if current_user.role == ROLE_ADMIN:
             return [UserDb.from_orm(user) for user in users]
@@ -55,7 +55,7 @@ async def get_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         user = await user_repo.get_user_by_id(user_id)
         if user is None:
             raise HTTPException(
@@ -76,7 +76,7 @@ async def update_user(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         if new_user_data.username != current_user.username:
             print(new_user_data.username, current_user.username)
             if await user_repo.get_user_by_username(new_user_data.username):
@@ -102,7 +102,7 @@ async def delete_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         if current_user.role == ROLE_ADMIN or current_user.id == user_id:
             user = await user_repo.delete_user(user_id)
             if user in HTTP_404_NOT_FOUND_DETAILS:
@@ -121,7 +121,7 @@ async def set_active_status(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         if current_user.role not in [ROLE_ADMIN, ROLE_MODERATOR]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -148,7 +148,7 @@ async def set_role(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await __is_current_user_logged_in(current_user):
+    if await is_current_user_logged_in(current_user):
         if current_user.role != ROLE_ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

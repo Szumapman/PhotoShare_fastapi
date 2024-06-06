@@ -2,7 +2,8 @@ import abc
 from datetime import datetime
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
-from src.database.models import User
+from src.database.models import User, Photo
+from src.schemas.photos import PhotoIn
 
 
 class AbstractUserRepo(abc.ABC):
@@ -60,4 +61,16 @@ class AbstractUserRepo(abc.ABC):
 
     @abc.abstractmethod
     async def set_user_role(self, user_id: int, role: UserRoleIn) -> User | str:
+        pass
+
+
+class AbstractPhotoRepo(abc.ABC):
+    @abc.abstractmethod
+    async def upload_photo(
+        self,
+        current_user_id: int,
+        photo_info: PhotoIn,
+        photo_url: str,
+        qr_code_url: str,
+    ) -> Photo:
         pass

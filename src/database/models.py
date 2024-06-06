@@ -104,7 +104,7 @@ class Comment(Base):
     )
     content = Column(String(MAX_COMMENT_LENGTH), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    uploaded_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class Rating(Base):

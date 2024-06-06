@@ -1,5 +1,8 @@
 import abc
 
+from fastapi import File
+import qrcode
+
 
 class AbstractAvatarProvider(abc.ABC):
 
@@ -15,4 +18,14 @@ class AbstractPasswordHandler(abc.ABC):
 
     @abc.abstractmethod
     def get_password_hash(self, password: str) -> str:
+        pass
+
+
+class AbstractPhotoStorageProvider(abc.ABC):
+    @abc.abstractmethod
+    async def upload_photo(self, photo: File) -> str:
+        pass
+
+    @abc.abstractmethod
+    async def create_qr_code(self, photo_url: str) -> str:
         pass
