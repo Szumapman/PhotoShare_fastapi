@@ -1,0 +1,2 @@
+class PhotoStorageProviderError(Exception):
+    pass
