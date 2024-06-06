@@ -11,7 +11,7 @@ console_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 
-file_handler = logging.FileHandler("PhotoShare_fastapi/logs/PhotoShare_fastapi.log")
+file_handler = logging.FileHandler("PhotoShare_fastapi.log")
 file_handler.setLevel(logging.ERROR)
 file_handler.setFormatter(formatter)
 
