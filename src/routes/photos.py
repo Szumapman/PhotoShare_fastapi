@@ -18,9 +18,10 @@ from src.database.dependencies import get_photo_repository
 from src.database.dependencies import get_photo_storage_provider
 from src.routes.auth import is_current_user_logged_in
 from src.conf.errors import PhotoStorageProviderError
+from src.conf.constant import PHOTOS
 
 
-router = APIRouter(prefix="/photos", tags=["photos"])
+router = APIRouter(prefix=PHOTOS, tags=["photos"])
 
 
 @router.post("/", response_model=PhotoCreated, status_code=status.HTTP_201_CREATED)

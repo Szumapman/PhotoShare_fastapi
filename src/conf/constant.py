@@ -12,6 +12,7 @@ API_V1 = "/api/v1"
 API = API_V1
 AUTH = "/auth"
 USERS = "/users"
+PHOTOS = "/photos"
 
 ACCESS_TOKEN = "access_token"
 REFRESH_TOKEN = "refresh_token"
