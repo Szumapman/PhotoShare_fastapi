@@ -21,14 +21,14 @@ from src.conf.constant import (
     INVALID_SCOPE,
     TOKEN_NOT_FOUND,
 )
-from tests.routes.conftest import EMAIL_STANDARD
+from tests.routes.conftest import EMAIL_STANDARD, PHOTO_URL, QR_CODE_URL
 from src.repository.users import PostgresUserRepo
 
 
-def test_signup_success(client, user_in_standard_json, user_db_standard):
+def test_signup_success(client_app, user_in_standard_json, user_db_standard):
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
-        response = client.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
+        response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_201_CREATED, response.text
         data = response.json()
         assert data["detail"] == USER_CREATED
@@ -37,22 +37,22 @@ def test_signup_success(client, user_in_standard_json, user_db_standard):
         assert data["user"]["role"] == user_db_standard.role
 
 
-def test_signup_fail(client, user_in_standard_json):
+def test_signup_fail(client_app, user_in_standard_json):
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
-        response = client.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
+        response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_409_CONFLICT, response.text
         data = response.json()
         assert data["detail"] == "Account with this email already exists"
         user_in_standard_json["email"] = "another@email.com"
-        response = client.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
+        response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_409_CONFLICT, response.text
         data = response.json()
         assert data["detail"] == "Account with this username already exists"
 
 
-def test_login_success(client, user_in_standard_json):
-    response = client.post(
+def test_login_success(client_app, user_in_standard_json):
+    response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": user_in_standard_json.get("email"),
@@ -64,8 +64,8 @@ def test_login_success(client, user_in_standard_json):
     assert data["token_type"] == "bearer"
 
 
-def test_login_fail_wrong_email(client, user_in_standard_json):
-    response = client.post(
+def test_login_fail_wrong_email(client_app, user_in_standard_json):
+    response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": "wrong_email@email.com",
@@ -77,8 +77,8 @@ def test_login_fail_wrong_email(client, user_in_standard_json):
     assert data["detail"] == INCORRECT_USERNAME_OR_PASSWORD
 
 
-def test_login_fail_wrong_password(client, user_in_standard_json):
-    response = client.post(
+def test_login_fail_wrong_password(client_app, user_in_standard_json):
+    response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": user_in_standard_json.get("email"),
@@ -90,13 +90,13 @@ def test_login_fail_wrong_password(client, user_in_standard_json):
     assert data["detail"] == INCORRECT_USERNAME_OR_PASSWORD
 
 
-def test_login_fail_user_banned(session, client, user_in_standard_json):
+def test_login_fail_user_banned(session, client_app, user_in_standard_json):
     user = (
         session.query(User).filter_by(email=user_in_standard_json.get("email")).first()
     )
     user.is_active = False
     session.commit()
-    response = client.post(
+    response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": user_in_standard_json.get("email"),
@@ -108,10 +108,10 @@ def test_login_fail_user_banned(session, client, user_in_standard_json):
     assert data["detail"] == BANNED_USER
 
 
-def test_refresh_token_success(client, tokens):
+def test_refresh_token_success(client_app, tokens):
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
-        response = client.get(
+        response = client_app.get(
             f"{API}{AUTH}/refresh_token",
             headers={"Authorization": f"Bearer {tokens['refresh_token']}"},
         )
@@ -120,11 +120,11 @@ def test_refresh_token_success(client, tokens):
         assert data["token_type"] == "bearer"
 
 
-def test_refresh_token_wrong_token(client, tokens):
+def test_refresh_token_wrong_token(client_app, tokens):
     wrong_refresh_token = tokens["refresh_token"] + "_wrong"
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
-        response = client.get(
+        response = client_app.get(
             f"{API}{AUTH}/refresh_token",
             headers={"Authorization": f"Bearer {wrong_refresh_token}"},
         )
@@ -132,7 +132,7 @@ def test_refresh_token_wrong_token(client, tokens):
         data = response.json()
         assert data["detail"] == COULD_NOT_VALIDATE_CREDENTIALS
 
-        response = client.get(
+        response = client_app.get(
             f"{API}{AUTH}/refresh_token",
             headers={"Authorization": f"Bearer {tokens['access_token']}"},
         )
@@ -143,7 +143,7 @@ def test_refresh_token_wrong_token(client, tokens):
 
 def test_refresh_token_no_user(
     session,
-    client,
+    client_app,
     tokens,
 ):
     user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
@@ -151,7 +151,7 @@ def test_refresh_token_no_user(
     session.commit()
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
-        response = client.get(
+        response = client_app.get(
             f"{API}{AUTH}/refresh_token",
             headers={"Authorization": f"Bearer {tokens['refresh_token']}"},
         )

@@ -2,15 +2,25 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi import File
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from main import app
-from src.database.models import Base, User
-from src.database.dependencies import get_user_repository, get_avatar_provider
+from src.database.models import Base, User, Photo
+from src.database.dependencies import (
+    get_user_repository,
+    get_avatar_provider,
+    get_photo_repository,
+    get_photo_storage_provider,
+)
 from src.repository.users import PostgresUserRepo
+from src.repository.photos import PostgresPhotoRepo
+from src.services.abstract import AbstractPhotoStorageProvider
 from src.services.avatar import AvatarProviderGravatar
+from src.services.photo_storage_provider import CloudinaryPhotoStorageProvider
 from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, API, AUTH
+
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -22,6 +32,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 USERNAME_STANDARD = "test user"
 EMAIL_STANDARD = "test@email.com"
 PASSWORD_STANDARD = "Password1!"
+
+PHOTO_URL = "test_photo_url"
+QR_CODE_URL = "test_qr_code_url"
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +49,7 @@ def session():
 
 
 @pytest.fixture(scope="module")
-def client(session):
+def client_app(session):
 
     def override_get_user_repository():
         try:
@@ -50,9 +63,20 @@ def client(session):
         finally:
             session.close()
 
+    def override_get_photo_repository():
+        try:
+            yield PostgresPhotoRepo(session)
+        finally:
+            session.close()
+
+    def override_get_photo_storage_provider():
+        return MockCloudinaryPhotoStorageProvider()
+
     app.dependency_overrides = {
         get_user_repository: override_get_user_repository,
         get_avatar_provider: override_get_avatar_provider,
+        get_photo_repository: override_get_photo_repository,
+        get_photo_storage_provider: override_get_photo_storage_provider,
     }
 
     yield TestClient(app)
@@ -67,7 +91,7 @@ def user_in_standard_json():
     }
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def user_db_standard():
     return User(
         id=2,
@@ -82,11 +106,11 @@ def user_db_standard():
 
 
 @pytest.fixture(scope="module")
-def tokens(session, client):
+def tokens(session, client_app):
     user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
     user.is_active = True
     session.commit()
-    response = client.post(
+    response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_STANDARD,
@@ -95,3 +119,33 @@ def tokens(session, client):
     )
     data = response.json()
     return data
+
+
+@pytest.fixture(scope="function")
+def access_token(session, client_app, user_in_standard_json):
+    client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
+    response = client_app.post(
+        f"{API}{AUTH}/login",
+        data={
+            "username": EMAIL_STANDARD,
+            "password": PASSWORD_STANDARD,
+        },
+    )
+    data = response.json()
+    return data["access_token"]
+
+
+@pytest.fixture(scope="module")
+def photo_in_json():
+    return {
+        "description": "test description",
+        "tags": [{"name": "tag1 test"}, {"name": "tag2 test"}],
+    }
+
+
+class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
+    async def upload_photo(self, photo: File) -> str:
+        return PHOTO_URL
+
+    async def create_qr_code(self, photo_url: str) -> str:
+        return QR_CODE_URL
