@@ -74,3 +74,7 @@ class AbstractPhotoRepo(abc.ABC):
         qr_code_url: str,
     ) -> Photo:
         pass
+
+    @abc.abstractmethod
+    async def get_photo_by_id(self, photo_id: int) -> Photo | str:
+        pass

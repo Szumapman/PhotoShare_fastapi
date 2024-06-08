@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from src.conf.constant import PHOTO_NOT_FOUND
 from src.database.models import Photo, Tag
 from src.repository.abstract import AbstractPhotoRepo
 from src.schemas.photos import PhotoIn
@@ -38,3 +39,9 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         self.db.commit()
         self.db.refresh(new_photo)
         return new_photo
+
+    async def get_photo_by_id(self, photo_id: int) -> Photo | str:
+        photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
+        if not photo:
+            return PHOTO_NOT_FOUND
+        return photo
