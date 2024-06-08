@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 
@@ -54,7 +53,7 @@ class PhotoOut(PhotoIn):
     transformation: dict[str, list] | None = None
     uploaded_at: datetime
     tags: list[TagOut] | None = None
-    comments: Optional[list[CommentOut]] | None = None
+    comments: list[CommentOut] | None = None
     rating: float | None = None
 
     model_config = {"from_attributes": True}
