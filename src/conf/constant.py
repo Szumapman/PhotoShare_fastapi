@@ -50,8 +50,9 @@ HTTP_403_FORBIDDEN_DETAILS = [
 
 TOKEN_NOT_FOUND = "Token not found"
 USER_NOT_FOUND = "User not found"
+PHOTO_NOT_FOUND = "Photo not found"
 
-HTTP_404_NOT_FOUND_DETAILS = [TOKEN_NOT_FOUND, USER_NOT_FOUND]
+HTTP_404_NOT_FOUND_DETAILS = [TOKEN_NOT_FOUND, USER_NOT_FOUND, PHOTO_NOT_FOUND]
 
 USERNAME_EXISTS = "User with this username already exists"
 EMAIL_EXISTS = "User with this email already exists"
