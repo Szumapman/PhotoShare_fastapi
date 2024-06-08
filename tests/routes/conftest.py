@@ -143,6 +143,17 @@ def photo_in_json():
     }
 
 
+@pytest.fixture(scope="function")
+def photo():
+    return Photo(
+        id=1,
+        description="test description",
+        photo_url=PHOTO_URL,
+        qr_url=QR_CODE_URL,
+        user_id=1,
+    )
+
+
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_photo(self, photo: File) -> str:
         return PHOTO_URL
