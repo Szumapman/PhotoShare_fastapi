@@ -78,3 +78,7 @@ class AbstractPhotoRepo(abc.ABC):
     @abc.abstractmethod
     async def get_photo_by_id(self, photo_id: int) -> Photo | str:
         pass
+
+    @abc.abstractmethod
+    async def delete_photo(self, photo_id: int, user_id: int) -> Photo | str:
+        pass

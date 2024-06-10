@@ -1,7 +1,8 @@
 import abc
 
 from fastapi import File
-import qrcode
+
+from src.database.models import Photo
 
 
 class AbstractAvatarProvider(abc.ABC):
@@ -28,4 +29,8 @@ class AbstractPhotoStorageProvider(abc.ABC):
 
     @abc.abstractmethod
     async def create_qr_code(self, photo_url: str) -> str:
+        pass
+
+    @abc.abstractmethod
+    async def delete_photo(self, photo: Photo):
         pass
