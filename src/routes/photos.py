@@ -76,7 +76,6 @@ async def delete_photo(
         get_photo_storage_provider
     ),
 ):
-    print(current_user)
     if await is_current_user_logged_in(current_user):
         photo = await photo_repo.delete_photo(photo_id, current_user.id)
         if photo in HTTP_404_NOT_FOUND_DETAILS:
