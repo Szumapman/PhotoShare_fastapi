@@ -30,7 +30,11 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 USERNAME_STANDARD = "test user"
+USERNAME_ADMIN = "test admin"
+USERNAME_MODERATOR = "test moderator"
 EMAIL_STANDARD = "test@email.com"
+EMAIL_ADMIN = "test_admin@email.com"
+EMAIL_MODERATOR = "test_moderator@email.com"
 PASSWORD_STANDARD = "Password1!"
 
 PHOTO_URL = "test_photo_url"
@@ -91,18 +95,22 @@ def user_in_standard_json():
     }
 
 
-@pytest.fixture(scope="module")
-def user_db_standard():
-    return User(
-        id=2,
-        username=USERNAME_STANDARD,
-        email=EMAIL_STANDARD,
-        password="<HASHED-PASSWORD>",
-        role=ROLE_STANDARD,
-        created_at=datetime.utcnow(),
-        avatar="avatar_url",
-        is_active=True,
-    )
+@pytest.fixture(scope="function")
+def user_in_admin_json():
+    return {
+        "username": USERNAME_ADMIN,
+        "email": EMAIL_ADMIN,
+        "password": PASSWORD_STANDARD,
+    }
+
+
+@pytest.fixture(scope="function")
+def user_in_moderator_json():
+    return {
+        "username": USERNAME_MODERATOR,
+        "email": EMAIL_MODERATOR,
+        "password": PASSWORD_STANDARD,
+    }
 
 
 @pytest.fixture(scope="module")
@@ -122,12 +130,40 @@ def tokens(session, client_app):
 
 
 @pytest.fixture(scope="function")
-def access_token(session, client_app, user_in_standard_json):
+def access_token_user_standard(session, client_app, user_in_standard_json):
     client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
     response = client_app.post(
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_STANDARD,
+            "password": PASSWORD_STANDARD,
+        },
+    )
+    data = response.json()
+    return data["access_token"]
+
+
+@pytest.fixture(scope="function")
+def access_token_user_admin(session, client_app, user_in_admin_json):
+    client_app.post(f"{API}{AUTH}/signup", json=user_in_admin_json)
+    response = client_app.post(
+        f"{API}{AUTH}/login",
+        data={
+            "username": EMAIL_ADMIN,
+            "password": PASSWORD_STANDARD,
+        },
+    )
+    data = response.json()
+    return data["access_token"]
+
+
+@pytest.fixture(scope="function")
+def access_token_user_moderator(session, client_app, user_in_moderator_json):
+    client_app.post(f"{API}{AUTH}/signup", json=user_in_moderator_json)
+    response = client_app.post(
+        f"{API}{AUTH}/login",
+        data={
+            "username": EMAIL_MODERATOR,
             "password": PASSWORD_STANDARD,
         },
     )
@@ -146,7 +182,7 @@ def photo_in_json():
 @pytest.fixture(scope="function")
 def photo():
     return Photo(
-        id=1,
+        id=2,
         description="test description",
         photo_url=PHOTO_URL,
         qr_url=QR_CODE_URL,
@@ -160,3 +196,6 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
 
     async def create_qr_code(self, photo_url: str) -> str:
         return QR_CODE_URL
+
+    async def delete_photo(self, photo_url: str) -> None:
+        pass

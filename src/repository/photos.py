@@ -55,8 +55,8 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
     async def delete_photo(self, photo_id: int, user_id: int) -> Photo | str:
         user = self.db.query(User).filter(User.id == user_id).first()
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
-        if user.role != ROLE_ADMIN or photo.user_id != user_id:
-            return FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR
-        self.db.delete(photo)
-        self.db.commit()
-        return photo
+        if photo.user_id == user_id or user.role == ROLE_ADMIN:
+            self.db.delete(photo)
+            self.db.commit()
+            return photo
+        return FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR

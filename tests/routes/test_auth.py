@@ -21,20 +21,25 @@ from src.conf.constant import (
     INVALID_SCOPE,
     TOKEN_NOT_FOUND,
 )
-from tests.routes.conftest import EMAIL_STANDARD, PHOTO_URL, QR_CODE_URL
+from tests.routes.conftest import (
+    EMAIL_STANDARD,
+    USERNAME_STANDARD,
+    PHOTO_URL,
+    QR_CODE_URL,
+)
 from src.repository.users import PostgresUserRepo
 
 
-def test_signup_success(client_app, user_in_standard_json, user_db_standard):
+def test_signup_success(client_app, user_in_standard_json):
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_201_CREATED, response.text
         data = response.json()
         assert data["detail"] == USER_CREATED
-        assert data["user"]["username"] == user_db_standard.username
-        assert data["user"]["email"] == user_db_standard.email
-        assert data["user"]["role"] == user_db_standard.role
+        assert data["user"]["username"] == USERNAME_STANDARD
+        assert data["user"]["email"] == EMAIL_STANDARD
+        assert data["user"]["role"] == ROLE_STANDARD
 
 
 def test_signup_fail(client_app, user_in_standard_json):
