@@ -14,7 +14,7 @@ class TagIn(BaseModel):
             raise ValueError(
                 f"Tag name must be less than {MAX_TAG_NAME_LENGTH} characters"
             )
-        regex = re.compile(r"[_!#$%^&*()<>?/|}{~:]")
+        regex = re.compile(r"[*^()<>?/|}{~:]")
         if regex.search(name):
             raise ValueError(f"Tag name contains invalid characters")
         return name
