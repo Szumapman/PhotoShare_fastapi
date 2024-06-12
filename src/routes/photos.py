@@ -19,7 +19,7 @@ from src.conf.errors import PhotoStorageProviderError
 from src.conf.constant import (
     PHOTOS,
     HTTP_404_NOT_FOUND_DETAILS,
-    FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
+    HTTP_403_FORBIDDEN_DETAILS,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
@@ -46,7 +46,7 @@ async def create_photo(
     except PhotoStorageProviderError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Photo storage provider error: " + str(e),
+            detail="Photo storage provider error",
         )
 
 
@@ -83,16 +83,38 @@ async def delete_photo(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=photo,
             )
-        if photo == FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR:
+        if photo in HTTP_403_FORBIDDEN_DETAILS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=photo,
             )
         try:
             await photo_storage_provider.delete_photo(photo)
-        except PhotoStorageProviderError as e:
+        except PhotoStorageProviderError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Photo storage provider error: " + str(e),
+                detail="Photo storage provider error",
+            )
+        return photo
+
+
+@router.patch("/{photo_id}", response_model=PhotoOut)
+async def update_photo(
+    photo_id: int,
+    photo_info: PhotoIn,
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+):
+    if await is_current_user_logged_in(current_user):
+        photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
+        if photo in HTTP_404_NOT_FOUND_DETAILS:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=photo,
+            )
+        if photo in HTTP_403_FORBIDDEN_DETAILS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=photo,
             )
         return photo

@@ -41,12 +41,14 @@ FORBIDDEN_FOR_USER_AND_MODERATOR = "Only admin can perform this operation."
 FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR = (
     "Only owner or admin can perform this operation."
 )
+FORBIDDEN_FOR_NOT_OWNER = "Only owner can perform this operation."
 BANNED_USER = "User is banned."
 
 HTTP_403_FORBIDDEN_DETAILS = [
     FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
     FORBIDDEN_FOR_USER,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
+    FORBIDDEN_FOR_NOT_OWNER,
     BANNED_USER,
 ]
 
