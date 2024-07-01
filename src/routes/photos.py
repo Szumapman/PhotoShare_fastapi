@@ -18,8 +18,6 @@ from src.routes.auth import is_current_user_logged_in
 from src.conf.errors import PhotoStorageProviderError, NotFoundError, ForbiddenError
 from src.conf.constant import (
     PHOTOS,
-    HTTP_404_NOT_FOUND_DETAILS,
-    HTTP_403_FORBIDDEN_DETAILS,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
