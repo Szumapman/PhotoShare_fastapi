@@ -15,7 +15,7 @@ from src.services.abstract import AbstractPhotoStorageProvider
 from src.database.dependencies import get_photo_repository
 from src.database.dependencies import get_photo_storage_provider
 from src.routes.auth import is_current_user_logged_in
-from src.conf.errors import PhotoStorageProviderError
+from src.conf.errors import PhotoStorageProviderError, NotFoundError, ForbiddenError
 from src.conf.constant import (
     PHOTOS,
     HTTP_404_NOT_FOUND_DETAILS,
@@ -57,12 +57,12 @@ async def get_photo(
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
     if await is_current_user_logged_in(current_user):
-        photo = await photo_repo.get_photo_by_id(photo_id)
-        print(photo)
-        if photo in HTTP_404_NOT_FOUND_DETAILS:
+        try:
+            photo = await photo_repo.get_photo_by_id(photo_id)
+        except NotFoundError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=photo,
+                detail=e.detail,
             )
         return photo
 
@@ -77,19 +77,19 @@ async def delete_photo(
     ),
 ):
     if await is_current_user_logged_in(current_user):
-        photo = await photo_repo.delete_photo(photo_id, current_user.id)
-        if photo in HTTP_404_NOT_FOUND_DETAILS:
+        try:
+            photo = await photo_repo.delete_photo(photo_id, current_user.id)
+            await photo_storage_provider.delete_photo(photo)
+        except NotFoundError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=photo,
+                detail=e.detail,
             )
-        if photo in HTTP_403_FORBIDDEN_DETAILS:
+        except ForbiddenError as e:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=photo,
+                detail=e.detail,
             )
-        try:
-            await photo_storage_provider.delete_photo(photo)
         except PhotoStorageProviderError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -106,15 +106,16 @@ async def update_photo(
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
     if await is_current_user_logged_in(current_user):
-        photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
-        if photo in HTTP_404_NOT_FOUND_DETAILS:
+        try:
+            photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
+        except NotFoundError as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=photo,
+                detail=e.detail,
             )
-        if photo in HTTP_403_FORBIDDEN_DETAILS:
+        except ForbiddenError as e:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=photo,
+                detail=e.detail,
             )
         return photo

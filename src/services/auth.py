@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 
 
 from src.conf.config import settings
+from src.conf.errors import UnauthorizedError, ForbiddenError
 from src.conf.constant import (
     AUTH,
     API,
@@ -86,37 +87,39 @@ class Auth:
             if payload["scope"] == REFRESH_TOKEN:
                 email = payload["sub"]
                 return email
-            return INVALID_SCOPE
+            raise UnauthorizedError(detail=INVALID_SCOPE)
         except JWTError:
-            return COULD_NOT_VALIDATE_CREDENTIALS
+            raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
 
     async def get_current_user(
         self,
         token: str = Depends(oauth2_scheme),
         user_repo: AbstractUserRepo = Depends(get_user_repository),
-    ) -> User | str:
+    ) -> User:
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
             if payload["scope"] == ACCESS_TOKEN:
                 email: str = payload["sub"]
                 if email is None:
-                    return COULD_NOT_VALIDATE_CREDENTIALS
+                    raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
             else:
-                return COULD_NOT_VALIDATE_CREDENTIALS
+                raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
         except JWTError:
-            return COULD_NOT_VALIDATE_CREDENTIALS
+            raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
         user = await self.r.get(f"user:{email}")
         if user is None:
             user = await user_repo.get_user_by_email(email)
             if user is None:
-                return COULD_NOT_VALIDATE_CREDENTIALS + f", email: {email}"
+                raise UnauthorizedError(
+                    detail=f"{COULD_NOT_VALIDATE_CREDENTIALS}, email: {email}"
+                )
             await self.update_user_in_redis(email, user)
         else:
             user = pickle.loads(user)
         if await user_repo.is_user_logout(token):
-            return LOG_IN_AGAIN
+            raise UnauthorizedError(detail=LOG_IN_AGAIN)
         if not user.is_active:
-            return BANNED_USER
+            raise ForbiddenError(detail=BANNED_USER)
         return user
 
     async def get_session_id_from_token(self, token: str, user_email: str) -> str:
@@ -126,11 +129,11 @@ class Auth:
                 email: str = payload["sub"]
                 session_id = payload["session_id"]
                 if email is None or email != user_email or session_id is None:
-                    return COULD_NOT_VALIDATE_CREDENTIALS
+                    raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
                 return session_id
-            return COULD_NOT_VALIDATE_CREDENTIALS
+            raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
         except JWTError:
-            return COULD_NOT_VALIDATE_CREDENTIALS
+            raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
 
     async def delete_user_from_redis(self, email: str):
         await self.r.delete(f"user:{email}")

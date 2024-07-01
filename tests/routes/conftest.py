@@ -18,7 +18,6 @@ from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.services.abstract import AbstractPhotoStorageProvider
 from src.services.avatar import AvatarProviderGravatar
-from src.services.photo_storage_provider import CloudinaryPhotoStorageProvider
 from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, API, AUTH
 
 

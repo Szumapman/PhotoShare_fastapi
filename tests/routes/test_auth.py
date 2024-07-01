@@ -162,4 +162,4 @@ def test_refresh_token_no_user(
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
         data = response.json()
-        assert data["detail"] == "Account connected with this token does not found"
+        assert data["detail"] == "User not found"

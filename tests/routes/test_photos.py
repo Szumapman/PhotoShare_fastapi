@@ -128,6 +128,7 @@ def test_delete_fail_wrong_user_id(
     photo.user_id = 999
     session.add(photo)
     session.commit()
+    session.refresh(photo)
     with patch.object(auth_service, "r") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(

@@ -23,9 +23,11 @@ from src.conf.constant import (
     USER_CREATED,
     BANNED_USER,
     INCORRECT_USERNAME_OR_PASSWORD,
+    USER_NOT_FOUND,
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
+from src.conf.errors import UnauthorizedError, NotFoundError, ForbiddenError
 
 router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
@@ -82,9 +84,7 @@ async def login(
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
     user = await user_repo.get_user_by_email(body.username)
-    # because of security reasons we don't want to tell the user if the email or password is incorrect
-    if user is None:
-        # incorrect email
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INCORRECT_USERNAME_OR_PASSWORD,
@@ -109,18 +109,20 @@ async def logout(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         token = credentials.credentials
-        answer = await auth_service.get_session_id_from_token(token, current_user.email)
-        if answer in HTTP_401_UNAUTHORIZED_DETAILS:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=answer)
-        session_id = answer
-        answer = await user_repo.logout_user(token, session_id, current_user)
-        if answer in HTTP_404_NOT_FOUND_DETAILS:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
-        user = answer
+        session_id = await auth_service.get_session_id_from_token(
+            token, current_user.email
+        )
+        user = await user_repo.logout_user(token, session_id, current_user)
         await auth_service.delete_user_from_redis(user.email)
-        return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
+    return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
 
 
 @router.get("/refresh_token", response_model=TokenModel)
@@ -128,19 +130,18 @@ async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    old_refresh_token = credentials.credentials
-    answer = await auth_service.decode_refresh_token(old_refresh_token)
-    if answer in HTTP_401_UNAUTHORIZED_DETAILS:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=answer)
-    email = answer
-    answer = await user_repo.get_user_by_email(email)
-    if answer is None:
+    try:
+        old_refresh_token = credentials.credentials
+        email = await auth_service.decode_refresh_token(old_refresh_token)
+        user = await user_repo.get_user_by_email(email)
+        if not user:
+            raise NotFoundError(detail=USER_NOT_FOUND)
+        await user_repo.delete_refresh_token(old_refresh_token, user.id)
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except NotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Account connected with this token does not found",
+            detail=e.detail,
         )
-    user = answer
-    answer = await user_repo.delete_refresh_token(old_refresh_token, user.id)
-    if answer in HTTP_404_NOT_FOUND_DETAILS:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
     return await __set_tokens(user, user_repo)

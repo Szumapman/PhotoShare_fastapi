@@ -29,6 +29,7 @@ from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.services.abstract import AbstractPasswordHandler
 from src.routes.auth import is_current_user_logged_in
+from src.conf.errors import NotFoundError, ForbiddenError, UnauthorizedError
 
 router = APIRouter(prefix=USERS, tags=["users"])
 
@@ -40,13 +41,19 @@ async def get_users(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         users = await user_repo.get_users()
         if current_user.role == ROLE_ADMIN:
             return [UserDb.from_orm(user) for user in users]
         elif current_user.role == ROLE_MODERATOR:
             return [UserModeratorView.from_orm(user) for user in users]
         return [UserPublic.from_orm(user) for user in users]
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
 
 @router.get("/{user_id}", response_model=UserDb | UserModeratorView | UserPublic)
@@ -55,18 +62,19 @@ async def get_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         user = await user_repo.get_user_by_id(user_id)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=USER_NOT_FOUND,
-            )
         if current_user.role == ROLE_ADMIN or current_user.id == user_id:
             return UserDb.from_orm(user)
         elif current_user.role == ROLE_MODERATOR:
             return UserModeratorView.from_orm(user)
         return UserPublic.from_orm(user)
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
 
 @router.patch("/", response_model=UserInfo)
@@ -76,9 +84,8 @@ async def update_user(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         if new_user_data.username != current_user.username:
-            print(new_user_data.username, current_user.username)
             if await user_repo.get_user_by_username(new_user_data.username):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT, detail=USERNAME_EXISTS
@@ -94,6 +101,12 @@ async def update_user(
         user = await user_repo.update_user(new_user_data, current_user.id)
         await auth_service.update_user_in_redis(user.email, user)
         return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
 
 @router.delete("/{user_id}", response_model=UserInfo)
@@ -102,16 +115,18 @@ async def delete_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         if current_user.role == ROLE_ADMIN or current_user.id == user_id:
-            user = await user_repo.delete_user(user_id)
-            if user in HTTP_404_NOT_FOUND_DETAILS:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=user,
-                )
+            user = await user_repo.get_user_by_id(user_id)
+            user = await user_repo.delete_user(user.id)
             await auth_service.delete_user_from_redis(user.email)
             return UserInfo(user=UserDb.model_validate(user), detail=USER_DELETE)
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
 
 @router.patch("/active_status/{user_id}", response_model=UserInfo)
@@ -121,24 +136,22 @@ async def set_active_status(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         if current_user.role not in [ROLE_ADMIN, ROLE_MODERATOR]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=FORBIDDEN_FOR_USER,
-            )
-        answer = await user_repo.set_user_active_status(
+            raise ForbiddenError(FORBIDDEN_FOR_USER)
+        user = await user_repo.set_user_active_status(
             user_id, active_status, current_user
         )
-        if answer in HTTP_404_NOT_FOUND_DETAILS:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
-        elif answer in HTTP_403_FORBIDDEN_DETAILS:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=answer)
-        user = answer
         return UserInfo(
             user=UserDb.from_orm(user),
             detail=f"User status set to {'active' if active_status.is_active else 'banned'}.",
         )
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
 
 @router.patch("/set_role/{user_id}", response_model=UserInfo)
@@ -148,16 +161,17 @@ async def set_role(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    if await is_current_user_logged_in(current_user):
+    try:
         if current_user.role != ROLE_ADMIN:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=FORBIDDEN_FOR_USER_AND_MODERATOR,
-            )
-        answer = await user_repo.set_user_role(user_id, role)
-        if answer in HTTP_404_NOT_FOUND_DETAILS:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=answer)
-        user = answer
+            raise ForbiddenError(FORBIDDEN_FOR_USER_AND_MODERATOR)
+        user = await user_repo.set_user_role(user_id, role)
+        await auth_service.update_user_in_redis(user.email, user)
         return UserInfo(
             user=UserDb.from_orm(user), detail=f"User role set to {role.role.value}."
         )
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
+    except ForbiddenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
