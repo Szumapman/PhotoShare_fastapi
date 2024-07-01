@@ -8,11 +8,11 @@ from src.schemas.photos import PhotoIn
 
 class AbstractUserRepo(abc.ABC):
     @abc.abstractmethod
-    async def get_user_by_email(self, email: str) -> User:
+    async def get_user_by_email(self, email: str) -> User | None:
         pass
 
     @abc.abstractmethod
-    async def get_user_by_username(self, username: str) -> User:
+    async def get_user_by_username(self, username: str) -> User | None:
         pass
 
     @abc.abstractmethod
@@ -42,11 +42,11 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def delete_refresh_token(self, token: str, user_id: int) -> str:
+    async def delete_refresh_token(self, token: str, user_id: int) -> None:
         pass
 
     @abc.abstractmethod
-    async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
+    async def logout_user(self, token: str, session_id: str, user: User) -> User:
         pass
 
     @abc.abstractmethod
@@ -56,11 +56,11 @@ class AbstractUserRepo(abc.ABC):
     @abc.abstractmethod
     async def set_user_active_status(
         self, user_id: int, active_status: ActiveStatus, current_user: User
-    ) -> User | str:
+    ) -> User:
         pass
 
     @abc.abstractmethod
-    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User | str:
+    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User:
         pass
 
 
@@ -76,15 +76,15 @@ class AbstractPhotoRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_photo_by_id(self, photo_id: int) -> Photo | str:
+    async def get_photo_by_id(self, photo_id: int) -> Photo:
         pass
 
     @abc.abstractmethod
-    async def delete_photo(self, photo_id: int, user_id: int) -> Photo | str:
+    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
         pass
 
     @abc.abstractmethod
     async def update_photo(
         self, photo_id: int, photo_info: PhotoIn, user_id: int
-    ) -> Photo | str:
+    ) -> Photo:
         pass
