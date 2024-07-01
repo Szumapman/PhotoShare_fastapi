@@ -15,6 +15,7 @@ from src.conf.constant import (
     ROLE_MODERATOR,
     FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
 )
+from src.conf.errors import NotFoundError, ForbiddenError
 
 
 class PostgresUserRepo(AbstractUserRepo):
@@ -27,8 +28,11 @@ class PostgresUserRepo(AbstractUserRepo):
     async def get_user_by_username(self, username: str) -> User | None:
         return self.db.query(User).filter(User.username == username).first()
 
-    async def get_user_by_id(self, user_id: int) -> User | None:
-        return self.db.query(User).filter(User.id == user_id).first()
+    async def get_user_by_id(self, user_id: int) -> User:
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise NotFoundError(detail=USER_NOT_FOUND)
+        return user
 
     async def get_users(self) -> list[User]:
         return self.db.query(User).all()
@@ -54,10 +58,10 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.refresh(user)
         return user
 
-    async def delete_user(self, user_id: int) -> User | str:
+    async def delete_user(self, user_id: int) -> User:
         user = self.db.query(User).filter(User.id == user_id).first()
         if user is None:
-            return USER_NOT_FOUND
+            raise NotFoundError(detail=USER_NOT_FOUND)
         self.db.delete(user)
         self.db.commit()
         return user
@@ -74,7 +78,7 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.add(refresh_token)
         self.db.commit()
 
-    async def delete_refresh_token(self, token: str, user_id: int) -> str:
+    async def delete_refresh_token(self, token: str, user_id: int) -> None:
         old_token = (
             self.db.query(RefreshToken)
             .filter(
@@ -85,12 +89,11 @@ class PostgresUserRepo(AbstractUserRepo):
             .first()
         )
         if old_token is None:
-            return TOKEN_NOT_FOUND
+            raise NotFoundError(detail=TOKEN_NOT_FOUND)
         self.db.delete(old_token)
         self.db.commit()
-        return TOKEN_DELETED
 
-    async def logout_user(self, token: str, session_id: str, user: User) -> User | str:
+    async def logout_user(self, token: str, session_id: str, user: User) -> User:
         refresh_token = (
             self.db.query(RefreshToken)
             .filter(
@@ -99,7 +102,7 @@ class PostgresUserRepo(AbstractUserRepo):
             .first()
         )
         if refresh_token is None:
-            return TOKEN_NOT_FOUND
+            raise NotFoundError(detail=TOKEN_NOT_FOUND)
         self.db.delete(refresh_token)
         logout_access_token = LogoutAccessToken(
             logout_access_token=token,
@@ -118,21 +121,21 @@ class PostgresUserRepo(AbstractUserRepo):
 
     async def set_user_active_status(
         self, user_id: int, active_status: ActiveStatus, current_user: User
-    ) -> User | str:
+    ) -> User:
         user = await self.get_user_by_id(user_id)
         if user is None:
-            return USER_NOT_FOUND
+            raise NotFoundError(detail=USER_NOT_FOUND)
         if user.role == ROLE_ADMIN and current_user.role == ROLE_MODERATOR:
-            return FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT
+            raise ForbiddenError(detail=FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT)
         user.is_active = active_status.is_active
         self.db.commit()
         self.db.refresh(user)
         return user
 
-    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User | str:
+    async def set_user_role(self, user_id: int, role: UserRoleIn) -> User:
         user = await self.get_user_by_id(user_id)
         if user is None:
-            return USER_NOT_FOUND
+            raise NotFoundError(detail=USER_NOT_FOUND)
         user.role = role.role
         self.db.commit()
         self.db.refresh(user)
