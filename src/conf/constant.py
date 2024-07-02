@@ -70,3 +70,10 @@ REFRESH_TOKEN_EXPIRE = 7  # days
 
 CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX = "PhotoShare_fastapi"
 CLOUDINARY_QR_PUBLIC_ID_PREFIX = CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX + "/qr_codes"
+
+PHOTO_SEARCH_ENUMS = [
+    "upload_date-desc",
+    "upload_date-asc",
+    "rating-desc",
+    "rating-asc",
+]
