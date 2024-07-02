@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import or_
 from src.conf.constant import (
     PHOTO_NOT_FOUND,
     USER_NOT_FOUND,
@@ -10,7 +10,7 @@ from src.conf.constant import (
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.database.models import Photo, Tag, User
 from src.repository.abstract import AbstractPhotoRepo
-from src.schemas.photos import PhotoIn
+from src.schemas.photos import PhotoIn, PhotoOut
 from src.schemas.tags import TagIn
 
 
@@ -41,7 +41,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         photo_info: PhotoIn,
         photo_url: str,
         qr_code_url: str,
-    ) -> Photo:
+    ) -> PhotoPut:
         photo_tags = await self._set_tags(photo_info.tags)
         new_photo = Photo(
             user_id=current_user_id,
@@ -55,13 +55,13 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         self.db.refresh(new_photo)
         return new_photo
 
-    async def get_photo_by_id(self, photo_id: int) -> Photo:
+    async def get_photo_by_id(self, photo_id: int) -> PhotoOut:
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if not photo:
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
         return photo
 
-    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
+    async def delete_photo(self, photo_id: int, user_id: int) -> PhotoOut:
         user = self.db.query(User).filter(User.id == user_id).first()
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if photo.user_id == user_id or user.role == ROLE_ADMIN:
@@ -74,7 +74,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
 
     async def update_photo(
         self, photo_id: int, photo_info: PhotoIn, user_id: int
-    ) -> Photo:
+    ) -> PhotoOut:
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if not photo:
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
@@ -85,3 +85,36 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         self.db.commit()
         self.db.refresh(photo)
         return photo
+
+    async def get_photos(
+        self, query: str, user_id: int, sort_by: str
+    ) -> list[PhotoOut]:
+        if query:
+            query_base = self.db.query(Photo).filter(
+                or_(
+                    Photo.description.ilike(f"%{query}%"),
+                    Photo.tags.any(Tag.name.ilike(f"%{query}%")),
+                )
+            )
+        else:
+            query_base = self.db.query(Photo)
+        # 0 is for return USER_NOT_FOUND when user put 0 as user_id
+        if user_id or user_id == 0:
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if user is None:
+                raise NotFoundError(detail=USER_NOT_FOUND)
+            query_base = query_base.filter(Photo.user_id == user_id)
+        if sort_by:
+            field, sort = sort_by.split("-")
+            if field == "upload_date":
+                query_base = query_base.order_by(
+                    Photo.uploaded_at.desc()
+                    if sort == "desc"
+                    else Photo.uploaded_at.asc()
+                )
+            elif field == "rating":
+                query_base = query_base.order_by(
+                    Photo.ratings.desc() if sort == "desc" else Photo.ratings.asc()
+                )
+        photos = query_base.all()
+        return [PhotoOut.model_validate(photo) for photo in photos]
