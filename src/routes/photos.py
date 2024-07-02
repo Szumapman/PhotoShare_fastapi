@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -5,6 +7,7 @@ from fastapi import (
     File,
     HTTPException,
     status,
+    Query,
 )
 
 from src.schemas.users import UserDb
@@ -18,9 +21,36 @@ from src.routes.auth import is_current_user_logged_in
 from src.conf.errors import PhotoStorageProviderError, NotFoundError, ForbiddenError
 from src.conf.constant import (
     PHOTOS,
+    PHOTO_SEARCH_ENUMS,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
+
+
+@router.get("/", response_model=list[PhotoOut])
+async def get_photos(
+    query: str | None = Query(
+        None, description="Search by keywords in description or tags"
+    ),
+    user_id: int | None = None,
+    sort_by: str | None = Query(
+        None,
+        enum=PHOTO_SEARCH_ENUMS,
+        description="Sort by date or rating",
+    ),
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+):
+    if sort_by and sort_by not in PHOTO_SEARCH_ENUMS:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid sort type"
+        )
+    if await is_current_user_logged_in(current_user):
+        try:
+            photos = await photo_repo.get_photos(query, user_id, sort_by)
+        except NotFoundError as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
+        return photos
 
 
 @router.post("/", response_model=PhotoCreated, status_code=status.HTTP_201_CREATED)
