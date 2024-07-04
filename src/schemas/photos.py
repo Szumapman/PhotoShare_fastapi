@@ -60,3 +60,62 @@ class PhotoOut(PhotoIn):
     rating: float | None = None
 
     model_config = {"from_attributes": True}
+
+
+class TransformIn(BaseModel):
+    """
+    Data model for transformation parameters given by user.
+
+    Attributes:
+        background (str): The background color of the transformation (e.g. blue, red).
+        aspect_ratio (str): The aspect ratio of the transformation (e.g. 16:10)
+        gravity (str): The gravity of the transformation (e.g. south, west or face).
+        angle (int): The angle of the transformation (e.g. -30 or 20, 0 means do not change).
+        width (int): The width of the transformed image (must be greater than 0, 0 means do not change).
+        height (int): The height of the transformed image (must be greater than 0, 0 means do not change).
+        crop (str): The crop effects like:
+            fill, lfill, fill_pad, crop, thumb, auto, scale, fit, limit, mfit, pad, lpad, mpad, imagga_scale, imagga_crop
+        effects (list[str]): The cloudinary transformation effects like:
+            art:al_dente/athena/audrey/aurora/daguerre/eucalyptus/fes/frost/hairspray/hokusai/incognito/linen/peacock
+                /primavera/quartz/red_rock/refresh/sizzle/sonnet/ukulele/zorro,
+            cartoonify, pixelate, saturation, blur, sepia, grayscale, vignette - you can add :value (e.g. 20)
+
+        more info:
+            cloudinary docs: https://cloudinary.com/documentation/transformation_reference
+    """
+
+    background: str = ""
+    aspect_ratio: str = ""
+    gravity: str = ""
+    angle: int = 0
+    width: int = 0
+    height: int = 0
+    crop: str = ""
+    effects: list[str] = []
+
+    @field_validator("width", "height")
+    def validate_width_height(cls, value) -> int:
+        if value < 0:
+            raise ValueError("The value cannot be negative.")
+        return value
+
+    @field_validator("effects")
+    def validate_effects(cls, effects) -> list[str]:
+        if effects and len(effects) > 0:
+            for effect in effects:
+                effect, *_ = effect.split(":")
+                if effect not in [
+                    "art",
+                    "cartoonify",
+                    "pixelate",
+                    "saturation",
+                    "blur",
+                    "sepia",
+                    "grayscale",
+                    "vignette",
+                ]:
+                    raise ValueError(
+                        "The value of the effect has to be one of the following: art, cartoonify, pixelate,"
+                        "saturation, blur, sepia, grayscale, vignette"
+                    )
+        return effects
