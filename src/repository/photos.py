@@ -20,7 +20,6 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
 
     async def _set_tags(self, photo_tags: list[TagIn]) -> list[Tag]:
         tags = []
-        print(photo_tags)
         for tag in photo_tags:
             tag_name = tag.name.strip().lower()
             if tag_name:
