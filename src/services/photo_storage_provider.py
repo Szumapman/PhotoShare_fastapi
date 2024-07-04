@@ -6,7 +6,7 @@ from fastapi import File
 import qrcode
 
 from src.services.abstract import AbstractPhotoStorageProvider
-from src.database.models import Photo
+from src.schemas.photos import PhotoOut
 from src.conf.config import settings
 from src.conf.constant import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
@@ -61,7 +61,7 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         qr_buffer.seek(0)
         return await self._upload(qr_buffer, qr_code=True)
 
-    async def delete_photo(self, photo: Photo):
+    async def delete_photo(self, photo: PhotoOut):
         try:
             photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo.photo_url.split('/')[-1].split('.')[0]}"
             cloudinary.uploader.destroy(photo_public_id, invalidate=True)
@@ -69,4 +69,4 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
             cloudinary.uploader.destroy(qrcode_public_id, invalidate=True)
         except Exception as e:
             logger.error(e)
-            raise PhotoStorageProviderError(e)
+            raise PhotoStorageProviderError(detail="Photo storage provider error")

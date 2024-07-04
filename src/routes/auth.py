@@ -33,16 +33,6 @@ router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
 
 
-async def is_current_user_logged_in(current_user) -> bool:
-    if current_user in HTTP_401_UNAUTHORIZED_DETAILS:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=current_user
-        )
-    elif current_user in HTTP_403_FORBIDDEN_DETAILS:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=current_user)
-    return True
-
-
 async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
     access_token, session_id = await auth_service.create_access_token(
         data={"sub": user.email}

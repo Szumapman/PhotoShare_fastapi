@@ -2,7 +2,7 @@ import abc
 
 from fastapi import File
 
-from src.database.models import Photo
+from src.schemas.photos import PhotoOut
 
 
 class AbstractAvatarProvider(abc.ABC):
@@ -32,5 +32,5 @@ class AbstractPhotoStorageProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def delete_photo(self, photo: Photo):
+    async def delete_photo(self, photo: PhotoOut):
         pass

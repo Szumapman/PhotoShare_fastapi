@@ -1,5 +1,12 @@
+from fastapi import HTTPException, status
+
+# from main import app
+
+
 class PhotoStorageProviderError(Exception):
-    pass
+    def __init__(self, message=None, detail=None):
+        super().__init__(message)
+        self.detail = detail
 
 
 class NotFoundError(Exception):

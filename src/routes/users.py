@@ -28,7 +28,6 @@ from src.schemas.users import (
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.services.abstract import AbstractPasswordHandler
-from src.routes.auth import is_current_user_logged_in
 from src.conf.errors import NotFoundError, ForbiddenError, UnauthorizedError
 
 router = APIRouter(prefix=USERS, tags=["users"])

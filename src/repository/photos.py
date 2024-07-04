@@ -41,7 +41,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         photo_info: PhotoIn,
         photo_url: str,
         qr_code_url: str,
-    ) -> PhotoPut:
+    ) -> PhotoOut:
         photo_tags = await self._set_tags(photo_info.tags)
         new_photo = Photo(
             user_id=current_user_id,
