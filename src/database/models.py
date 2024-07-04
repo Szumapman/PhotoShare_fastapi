@@ -45,7 +45,7 @@ class Photo(Base):
     )
     photo_url = Column(String(255), nullable=False)
     qr_url = Column(String(255), nullable=False)
-    transformation = Column(JSON, nullable=True)
+    transformations = Column(JSON, nullable=True)
     description = Column(String(MAX_DESCRIPTION_LENGTH), nullable=True)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
 
