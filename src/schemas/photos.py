@@ -53,7 +53,7 @@ class PhotoOut(PhotoIn):
     user_id: int
     photo_url: str
     qr_url: str
-    transformation: dict[str, list] | None = None
+    transformations: dict[str, list] | None = None
     uploaded_at: datetime
     tags: list[TagOut] | None = None
     comments: list[CommentOut] | None = None
