@@ -31,7 +31,6 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                 self.db.refresh(tag)
                 tags.append(tag)
                 print(tags, f"after adding {tag.name}")
-        print(tags)
         return tags
 
     async def upload_photo(
