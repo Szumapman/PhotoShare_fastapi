@@ -10,7 +10,7 @@ from src.conf.constant import (
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.database.models import Photo, Tag, User
 from src.repository.abstract import AbstractPhotoRepo
-from src.schemas.photos import PhotoIn, PhotoOut
+from src.schemas.photos import PhotoIn, PhotoOut, TransformIn
 from src.schemas.tags import TagIn
 
 
@@ -117,3 +117,18 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                 )
         photos = query_base.all()
         return [PhotoOut.model_validate(photo) for photo in photos]
+
+    async def add_transform_photo(
+        self, photo_id: int, transform_params: list[str], transformation_url: str
+    ) -> PhotoOut:
+        photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
+        if not photo:
+            raise NotFoundError(detail=PHOTO_NOT_FOUND)
+        transformations = photo.transformations or {}
+        photo.transformations = None
+        self.db.commit()
+        transformations[transformation_url] = transform_params
+        photo.transformations = transformations
+        self.db.commit()
+        self.db.refresh(photo)
+        return photo

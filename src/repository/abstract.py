@@ -95,3 +95,9 @@ class AbstractPhotoRepo(abc.ABC):
         self, photo_id: int, photo_info: PhotoIn, user_id: int
     ) -> PhotoOut:
         pass
+
+    @abc.abstractmethod
+    async def add_transform_photo(
+        self, photo_id: int, transform_params: list[str], transform_url: str
+    ) -> PhotoOut:
+        pass

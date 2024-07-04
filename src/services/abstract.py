@@ -2,7 +2,7 @@ import abc
 
 from fastapi import File
 
-from src.schemas.photos import PhotoOut
+from src.schemas.photos import PhotoOut, TransformIn
 
 
 class AbstractAvatarProvider(abc.ABC):
@@ -33,4 +33,10 @@ class AbstractPhotoStorageProvider(abc.ABC):
 
     @abc.abstractmethod
     async def delete_photo(self, photo: PhotoOut):
+        pass
+
+    @abc.abstractmethod
+    async def transform_photo(
+        self, photo: PhotoOut, transform: TransformIn
+    ) -> (str, list[str]):
         pass

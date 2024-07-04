@@ -6,14 +6,14 @@ from fastapi import File
 import qrcode
 
 from src.services.abstract import AbstractPhotoStorageProvider
-from src.schemas.photos import PhotoOut
+from src.schemas.photos import PhotoOut, TransformIn
 from src.conf.config import settings
 from src.conf.constant import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
     CLOUDINARY_QR_PUBLIC_ID_PREFIX,
 )
 from src.conf.logger import logger
-from src.conf.errors import PhotoStorageProviderError
+from src.conf.errors import PhotoStorageProviderError, NotFoundError
 
 
 class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
@@ -67,6 +67,47 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
             cloudinary.uploader.destroy(photo_public_id, invalidate=True)
             qrcode_public_id = f"{CLOUDINARY_QR_PUBLIC_ID_PREFIX}/{photo.qr_url.split('/')[-1].split('.')[0]}"
             cloudinary.uploader.destroy(qrcode_public_id, invalidate=True)
+        except Exception as e:
+            logger.error(e)
+            raise PhotoStorageProviderError(detail="Photo storage provider error")
+
+    async def transform_photo(
+        self, photo: PhotoOut, transform: TransformIn
+    ) -> (str, list[str]):
+        """
+        Function to perform transformations on a photo.
+
+        Args:
+             photo (PhotoOut): Photo to be transformed.
+             transform (TransformIn): Transformation parameters.
+
+        Returns:
+            tuple (str, list[str]): the transformation url and the list of transformation parameters.
+        """
+        try:
+            params = []
+            if transform.background:
+                params.append({"background": transform.background})
+            if transform.angle:
+                params.append({"angle": transform.angle})
+            if transform.width:
+                params.append({"width": transform.width})
+            if transform.height:
+                params.append({"height": transform.height})
+            if transform.crop:
+                params.append({"crop": transform.crop})
+            if transform.effects:
+                for effect in transform.effects:
+                    params.append({"effect": effect})
+            if not params:
+                raise NotFoundError(
+                    detail="No valid transformation parameters were provided.",
+                )
+            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo.photo_url.split('/')[-1].split('.')[0]}"
+            transform_url = cloudinary.utils.cloudinary_url(
+                photo_public_id, transformation=params
+            )[0]
+            return transform_url, params
         except Exception as e:
             logger.error(e)
             raise PhotoStorageProviderError(detail="Photo storage provider error")

@@ -10,8 +10,9 @@ from fastapi import (
     Query,
 )
 
+from src.conf.errors import ForbiddenError
 from src.schemas.users import UserDb
-from src.schemas.photos import PhotoOut, PhotoIn, PhotoCreated
+from src.schemas.photos import PhotoOut, PhotoIn, PhotoCreated, TransformIn
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractPhotoRepo
 from src.services.abstract import AbstractPhotoStorageProvider
@@ -20,6 +21,7 @@ from src.database.dependencies import get_photo_storage_provider
 from src.conf.constant import (
     PHOTOS,
     PHOTO_SEARCH_ENUMS,
+    FORBIDDEN_FOR_NOT_OWNER,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
@@ -97,4 +99,26 @@ async def update_photo(
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
     photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
+    return photo
+
+
+@router.post("/{photo_id}/transform", response_model=PhotoOut)
+async def transform_photo(
+    photo_id: int,
+    transform: TransformIn,
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_storage_provider: AbstractPhotoStorageProvider = Depends(
+        get_photo_storage_provider
+    ),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+):
+    photo = await photo_repo.get_photo_by_id(photo_id)
+    if photo.user_id != current_user.id:
+        raise ForbiddenError(detail=FORBIDDEN_FOR_NOT_OWNER)
+    transform_url, transform_params = await photo_storage_provider.transform_photo(
+        photo, transform
+    )
+    photo = await photo_repo.add_transform_photo(
+        photo_id, transform_params, transform_url
+    )
     return photo
