@@ -111,7 +111,9 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                 )
             elif field == "rating":
                 query_base = query_base.order_by(
-                    Photo.ratings.desc() if sort == "desc" else Photo.ratings.asc()
+                    Photo.average_rating.desc()
+                    if sort == "desc"
+                    else Photo.average_rating.asc()
                 )
         photos = query_base.all()
         return [PhotoOut.model_validate(photo) for photo in photos]
