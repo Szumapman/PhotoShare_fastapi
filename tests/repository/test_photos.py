@@ -77,7 +77,7 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         )
         self.photo_mock = MagicMock()
         self.photo_mock.id = 1
-        self.photo_mock.user_id = self.user.id
+        self.photo_mock.user_id = self.user_mock.id
         self.photo_mock.photo_url = self.photo_url
         self.photo_mock.qr_url = self.qr_code_url
         self.photo_mock.description = self.photo_info.description
@@ -202,3 +202,12 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ForbiddenError) as e:
             await self.repo.delete_photo(self.photo_mock.id, self.user_mock.id)
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR)
+
+    async def test_delete_photo_fail_not_found(self):
+        self.db.query.return_value.filter.return_value.first.side_effect = [
+            self.user_mock,
+            None,
+        ]
+        with self.assertRaises(NotFoundError) as e:
+            await self.repo.delete_photo(self.photo_mock.id, self.user_mock.id)
+        self.assertEqual(e.exception.detail, PHOTO_NOT_FOUND)
