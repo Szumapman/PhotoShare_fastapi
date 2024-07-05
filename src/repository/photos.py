@@ -78,7 +78,8 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         if user_id != photo.user_id:
             raise ForbiddenError(detail=FORBIDDEN_FOR_NOT_OWNER)
         photo.description = photo_info.description
-        photo.tags = await self._set_tags(photo_info.tags)
+        if photo_info.tags:
+            photo.tags = await self._set_tags(photo_info.tags)
         self.db.commit()
         self.db.refresh(photo)
         return photo
