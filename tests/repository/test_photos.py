@@ -13,6 +13,7 @@ from src.conf.constant import (
     PHOTO_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
     ROLE_ADMIN,
+    FORBIDDEN_FOR_NOT_OWNER,
 )
 
 
@@ -211,3 +212,48 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(NotFoundError) as e:
             await self.repo.delete_photo(self.photo_mock.id, self.user_mock.id)
         self.assertEqual(e.exception.detail, PHOTO_NOT_FOUND)
+
+    async def test_update_photo_success(self):
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.photo_mock
+        )
+        new_photo_no_tags = PhotoIn(
+            description="New description",
+        )
+        photo_updated = await self.repo.update_photo(
+            self.photo_mock.id,
+            new_photo_no_tags,
+            self.user_mock.id,
+        )
+        assert photo_updated.id == self.photo_mock.id
+        assert photo_updated.user_id == self.user_mock.id
+        assert photo_updated.description == new_photo_no_tags.description
+
+        new_phot_with_tags = PhotoIn(
+            description="New description 2",
+            tags=[self.tag1_in, self.tag2_in],
+        )
+        photo_updated = await self.repo.update_photo(
+            self.photo_mock.id,
+            new_phot_with_tags,
+            self.user_mock.id,
+        )
+        assert photo_updated.id == self.photo_mock.id
+        assert photo_updated.user_id == self.user_mock.id
+        assert photo_updated.description == new_phot_with_tags.description
+
+    async def test_update_photo_fail_not_owner(self):
+        self.user_mock.id = 999
+        self.db.query.return_value.filter.return_value.first.return_value = (
+            self.photo_mock
+        )
+        new_photo_no_tags = PhotoIn(
+            description="New description",
+        )
+        with self.assertRaises(ForbiddenError) as e:
+            await self.repo.update_photo(
+                self.photo_mock.id,
+                new_photo_no_tags,
+                self.user_mock.id,
+            )
+        self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER)
