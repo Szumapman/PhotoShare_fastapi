@@ -16,6 +16,7 @@ from src.database.dependencies import (
 )
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
+from src.schemas.photos import PhotoOut, TransformIn
 from src.services.abstract import AbstractPhotoStorageProvider
 from src.services.avatar import AvatarProviderGravatar
 from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, API, AUTH
@@ -197,4 +198,9 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         return QR_CODE_URL
 
     async def delete_photo(self, photo_url: str) -> None:
+        pass
+
+    async def transform_photo(
+        self, photo: PhotoOut, transform: TransformIn
+    ) -> (str, list[str]):
         pass

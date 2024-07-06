@@ -257,3 +257,5 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
                 self.user_mock.id,
             )
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER)
+
+    async def test_
