@@ -14,6 +14,7 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
     ROLE_ADMIN,
     FORBIDDEN_FOR_NOT_OWNER,
+    USER_NOT_FOUND,
 )
 
 
@@ -65,16 +66,18 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             user_id=self.user.id,
             photo_url=self.photo_url,
             qr_url=self.qr_code_url,
+            uploaded_at=datetime(year=2024, month=1, day=1),
             description=self.photo_info.description,
-            tags=[self.tag1, self.tag2],
+            tags=[Tag(id=1, name="tag_1"), Tag(id=2, name="tag_2")],
         )
         self.photo_2 = Photo(
             id=2,
             user_id=self.user_2.id,
             photo_url=self.photo_url,
             qr_url=self.qr_code_url,
-            description=self.photo_info.description,
-            tags=[self.tag1],
+            uploaded_at=datetime(year=2024, month=2, day=2),
+            description="Another description",
+            tags=[Tag(id=1, name="tag_1")],
         )
         self.photo_mock = MagicMock()
         self.photo_mock.id = 1
@@ -258,4 +261,75 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER)
 
-    async def test_
+    async def test_get_photos_all_success(self):
+        self.db.query.return_value.all.return_value = [self.photo, self.photo_2]
+        photos_out = await self.repo.get_photos()
+        assert len(photos_out) == 2
+        assert photos_out[0].id == self.photo.id
+        assert photos_out[0].user_id == self.user.id
+        assert photos_out[1].id == self.photo_2.id
+        assert photos_out[1].user_id == self.user_2.id
+
+    async def test_get_photos_with_query_success(self):
+        self.db.query.return_value.filter.return_value.all.return_value = [self.photo_2]
+        photos_out = await self.repo.get_photos(query="Another")
+        assert len(photos_out) == 1
+        assert photos_out[0].id == self.photo_2.id
+        assert photos_out[0].description == self.photo_2.description
+
+        self.db.query.return_value.filter.return_value.all.return_value = [
+            self.photo,
+            self.photo_2,
+        ]
+        photos_out = await self.repo.get_photos(query="tag")
+        assert len(photos_out) == 2
+
+    async def test_get_photos_with_user_id_success(self):
+        self.db.query.return_value.filter.return_value.all.return_value = [self.photo_2]
+        photos_out = await self.repo.get_photos(user_id=self.user_2.id)
+        assert len(photos_out) == 1
+        assert photos_out[0].id == self.photo_2.id
+        assert photos_out[0].user_id == self.user_2.id
+
+    async def test_get_photos_with_user_id_and_query_success(self):
+        self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            self.photo_2
+        ]
+        photos_out = await self.repo.get_photos(
+            query="Another",
+            user_id=self.user_2.id,
+        )
+        assert len(photos_out) == 1
+        assert photos_out[0].id == self.photo_2.id
+        assert photos_out[0].user_id == self.user_2.id
+        assert photos_out[0].description == self.photo_2.description
+
+    async def test_get_photos_with_user_id_as_zero_or_non_exist_fail(self):
+        self.db.query.return_value.filter.return_value.first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.repo.get_photos(user_id=0)
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+        with self.assertRaises(NotFoundError) as e:
+            await self.repo.get_photos(user_id=999)
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+
+    async def test_get_photos_with_sort_by_success(self):
+        self.db.query.return_value.order_by.return_value.all.return_value = [
+            self.photo_2,
+            self.photo,
+        ]
+        photos_out = await self.repo.get_photos(sort_by="upload_date-desc")
+        assert len(photos_out) == 2
+        assert photos_out[0].id == self.photo_2.id
+        assert photos_out[1].id == self.photo.id
+
+        self.db.query.return_value.order_by.return_value.all.return_value = [
+            self.photo,
+            self.photo_2,
+        ]
+        photos_out = await self.repo.get_photos(sort_by="upload_date-asc")
+        assert len(photos_out) == 2
+        assert photos_out[0].id == self.photo.id
+        assert photos_out[1].id == self.photo_2.id
+
+        # add test for sort by rating when ready
