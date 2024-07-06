@@ -20,6 +20,7 @@ from src.conf.constant import (
     PHOTOS,
     PHOTO_SEARCH_ENUMS,
     FORBIDDEN_FOR_NOT_OWNER,
+    INVALID_SORT_TYPE,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
@@ -41,7 +42,7 @@ async def get_photos(
 ):
     if sort_by and sort_by not in PHOTO_SEARCH_ENUMS:
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Invalid sort type"
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=INVALID_SORT_TYPE
         )
     photos = await photo_repo.get_photos(query, user_id, sort_by)
     return photos
