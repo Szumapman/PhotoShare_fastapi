@@ -182,11 +182,22 @@ def photo_in_json():
 @pytest.fixture(scope="function")
 def photo():
     return Photo(
-        id=2,
+        id=1,
         description="test description",
         photo_url=PHOTO_URL,
         qr_url=QR_CODE_URL,
         user_id=1,
+    )
+
+
+@pytest.fixture(scope="function")
+def photo_2():
+    return Photo(
+        id=2,
+        description="another text",
+        photo_url=PHOTO_URL,
+        qr_url=QR_CODE_URL,
+        user_id=2,
     )
 
 
