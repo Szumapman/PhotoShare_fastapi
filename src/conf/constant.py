@@ -77,3 +77,4 @@ PHOTO_SEARCH_ENUMS = [
     "rating-desc",
     "rating-asc",
 ]
+INVALID_SORT_TYPE = "Invalid sort type"
