@@ -1,5 +1,6 @@
 from unittest.mock import Mock, MagicMock, patch, AsyncMock
 from datetime import datetime
+from time import sleep
 
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
@@ -22,6 +23,8 @@ from src.conf.constant import (
     TOKEN_NOT_FOUND,
     PHOTO_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
+    USER_NOT_FOUND,
+    INVALID_SORT_TYPE,
 )
 from tests.routes.conftest import (
     EMAIL_STANDARD,
@@ -158,3 +161,158 @@ def test_delete_by_moderator_fail(
         )
     assert response.status_code == status.HTTP_403_FORBIDDEN, response.text
     assert response.json()["detail"] == FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR
+
+
+def test_get_photos_all_no_query_success(
+    session, client_app, photo, photo_2, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.add(photo_2)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == photo.id
+    assert data[1]["id"] == photo_2.id
+
+
+def test_get_photos_all_with_query_success(
+    session, client_app, photo, photo_2, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.add(photo_2)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?query=test",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == photo.id
+    assert data[0]["description"] == photo.description
+
+
+def test_get_photos_all_with_user_id_success(
+    session, client_app, photo, photo_2, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.add(photo_2)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?user_id=1",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == photo.id
+    assert data[0]["description"] == photo.description
+
+
+def test_get_photos_all_with_user_id_and_query_success(
+    session, client_app, photo, photo_2, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.add(photo_2)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?user_id=1&query=test",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == photo.id
+    assert data[0]["description"] == photo.description
+
+
+def test_get_photos_all_with_sort_by_success(
+    session, client_app, photo, photo_2, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    sleep(1)
+    session.add(photo_2)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?sort_by=upload_date-desc",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == photo_2.id
+    assert data[1]["id"] == photo.id
+
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?sort_by=upload_date-asc",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == photo.id
+    assert data[1]["id"] == photo_2.id
+
+    # add sort by rating tests
+
+
+def test_get_photos_wrong_user_id_fail(
+    session, client_app, photo, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?user_id=999",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
+    assert response.json()["detail"] == USER_NOT_FOUND
+
+
+def test_get_photos_wrong_sort_by_text_fail(
+    session, client_app, photo, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}?sort_by=test",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY, response.text
+    assert response.json()["detail"] == INVALID_SORT_TYPE
