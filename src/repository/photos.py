@@ -85,17 +85,19 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         return photo
 
     async def get_photos(
-        self, query: str, user_id: int, sort_by: str
+        self,
+        query: str | None = None,
+        user_id: int | None = None,
+        sort_by: str | None = None,
     ) -> list[PhotoOut]:
+        query_base = self.db.query(Photo)
         if query:
-            query_base = self.db.query(Photo).filter(
+            query_base = query_base.filter(
                 or_(
                     Photo.description.ilike(f"%{query}%"),
                     Photo.tags.any(Tag.name.ilike(f"%{query}%")),
                 )
             )
-        else:
-            query_base = self.db.query(Photo)
         # 0 is for return USER_NOT_FOUND when user put 0 as user_id
         if user_id or user_id == 0:
             user = self.db.query(User).filter(User.id == user_id).first()
