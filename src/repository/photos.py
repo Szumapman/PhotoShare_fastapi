@@ -71,9 +71,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
     async def update_photo(
         self, photo_id: int, photo_info: PhotoIn, user_id: int
     ) -> Photo:
-        photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
-        if not photo:
-            raise NotFoundError(detail=PHOTO_NOT_FOUND)
+        photo = await self.get_photo_by_id(photo_id)
         if user_id != photo.user_id:
             raise ForbiddenError(detail=FORBIDDEN_FOR_NOT_OWNER)
         photo.description = photo_info.description
