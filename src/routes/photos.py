@@ -85,8 +85,8 @@ async def delete_photo(
         get_photo_storage_provider
     ),
 ):
-    photo = await photo_repo.delete_photo(photo_id, current_user.id)
-    await photo_storage_provider.delete_photo(photo)
+    photo = await photo_repo.delete_photo(photo_id, current_user.id, current_user.role)
+    await photo_storage_provider.delete_photo(photo.photo_url, photo.qr_url)
     return photo
 
 

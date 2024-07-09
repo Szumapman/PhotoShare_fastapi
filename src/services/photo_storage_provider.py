@@ -61,11 +61,11 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         qr_buffer.seek(0)
         return await self._upload(qr_buffer, qr_code=True)
 
-    async def delete_photo(self, photo: PhotoOut):
+    async def delete_photo(self, photo_url: str, qr_url: str):
         try:
-            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo.photo_url.split('/')[-1].split('.')[0]}"
+            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo_url.split('/')[-1].split('.')[0]}"
             cloudinary.uploader.destroy(photo_public_id, invalidate=True)
-            qrcode_public_id = f"{CLOUDINARY_QR_PUBLIC_ID_PREFIX}/{photo.qr_url.split('/')[-1].split('.')[0]}"
+            qrcode_public_id = f"{CLOUDINARY_QR_PUBLIC_ID_PREFIX}/{qr_url.split('/')[-1].split('.')[0]}"
             cloudinary.uploader.destroy(qrcode_public_id, invalidate=True)
         except Exception as e:
             logger.error(e)

@@ -175,12 +175,9 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(e.exception.detail, PHOTO_NOT_FOUND)
 
     async def test_delete_photo_success_user_is_owner(self):
-        self.db.query.return_value.filter.return_value.first.side_effect = [
-            self.user_mock,
-            self.photo_mock,
-        ]
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo_mock)
         photo_deleted = await self.repo.delete_photo(
-            self.photo_mock.id, self.user_mock.id
+            self.photo_mock.id, self.user_mock.id, self.user_mock.role
         )
         assert photo_deleted.id == self.photo_mock.id
         assert photo_deleted.user_id == self.user_mock.id
@@ -188,33 +185,20 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
     async def test_delete_photo_success_user_is_admin(self):
         self.photo_mock.user_id = 999
         self.user_mock.role = ROLE_ADMIN
-        self.db.query.return_value.filter.return_value.first.side_effect = [
-            self.user_mock,
-            self.photo_mock,
-        ]
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo_mock)
         photo_deleted = await self.repo.delete_photo(
-            self.photo_mock.id, self.user_mock.id
+            self.photo_mock.id, self.user_mock.id, self.user_mock.role
         )
         assert photo_deleted.id == self.photo_mock.id
 
     async def test_delete_photo_fail_not_owner(self):
         self.user_mock.id = 999
-        self.db.query.return_value.filter.return_value.first.side_effect = [
-            self.user_mock,
-            self.photo_mock,
-        ]
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo_mock)
         with self.assertRaises(ForbiddenError) as e:
-            await self.repo.delete_photo(self.photo_mock.id, self.user_mock.id)
+            await self.repo.delete_photo(
+                self.photo_mock.id, self.user_mock.id, self.user_mock.role
+            )
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR)
-
-    async def test_delete_photo_fail_not_found(self):
-        self.db.query.return_value.filter.return_value.first.side_effect = [
-            self.user_mock,
-            None,
-        ]
-        with self.assertRaises(NotFoundError) as e:
-            await self.repo.delete_photo(self.photo_mock.id, self.user_mock.id)
-        self.assertEqual(e.exception.detail, PHOTO_NOT_FOUND)
 
     async def test_update_photo_success(self):
         self.db.query.return_value.filter.return_value.first.return_value = (

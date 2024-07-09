@@ -208,7 +208,7 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def create_qr_code(self, photo_url: str) -> str:
         return QR_CODE_URL
 
-    async def delete_photo(self, photo_url: str) -> None:
+    async def delete_photo(self, photo_url: str, qr_url: str) -> None:
         pass
 
     async def transform_photo(

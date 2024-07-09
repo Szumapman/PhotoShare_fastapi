@@ -87,7 +87,7 @@ class AbstractPhotoRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
+    async def delete_photo(self, photo_id: int, user_id: int, user_role: str) -> Photo:
         pass
 
     @abc.abstractmethod

@@ -32,7 +32,7 @@ class AbstractPhotoStorageProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def delete_photo(self, photo: PhotoOut):
+    async def delete_photo(self, photo_url: str, qr_url: str):
         pass
 
     @abc.abstractmethod

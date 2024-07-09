@@ -60,12 +60,9 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
         return photo
 
-    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
-        user = self.db.query(User).filter(User.id == user_id).first()
-        photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
-        if photo is None:
-            raise NotFoundError(detail=PHOTO_NOT_FOUND)
-        if photo.user_id == user_id or user.role == ROLE_ADMIN:
+    async def delete_photo(self, photo_id: int, user_id: int, user_role: str) -> Photo:
+        photo = await self.get_photo_by_id(photo_id)
+        if photo.user_id == user_id or user_role == ROLE_ADMIN:
             self.db.delete(photo)
             self.db.commit()
             return photo
