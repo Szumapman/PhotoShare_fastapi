@@ -39,12 +39,14 @@ async def get_photos(
     ),
     current_user: UserDb = Depends(auth_service.get_current_user),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+    skip: int = 0,
+    limit: int = 10,
 ):
     if sort_by and sort_by not in PHOTO_SEARCH_ENUMS:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=INVALID_SORT_TYPE
         )
-    photos = await photo_repo.get_photos(query, user_id, sort_by)
+    photos = await photo_repo.get_photos(skip, limit, query, user_id, sort_by)
     return photos
 
 
@@ -61,7 +63,10 @@ async def create_photo(
     photo_url = await photo_storage_provider.upload_photo(photo)
     qr_code_url = await photo_storage_provider.create_qr_code(photo_url)
     uploaded_photo = await photo_repo.upload_photo(
-        current_user.id, photo_info, photo_url, qr_code_url
+        current_user.id,
+        photo_info,
+        photo_url,
+        qr_code_url,
     )
     return uploaded_photo
 

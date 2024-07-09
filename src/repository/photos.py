@@ -83,6 +83,8 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
 
     async def get_photos(
         self,
+        skip: int,
+        limit: int,
         query: str | None = None,
         user_id: int | None = None,
         sort_by: str | None = None,
@@ -115,7 +117,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                     if sort == "desc"
                     else Photo.average_rating.asc()
                 )
-        photos = query_base.all()
+        photos = query_base.offset(skip).limit(limit).all()
         return photos
 
     async def add_transform_photo(

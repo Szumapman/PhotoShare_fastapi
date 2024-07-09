@@ -78,7 +78,12 @@ class AbstractPhotoRepo(abc.ABC):
 
     @abc.abstractmethod
     async def get_photos(
-        self, query: str, user_id: int, sort_by: str
+        self,
+        skip: int,
+        limit: int,
+        query: str,
+        user_id: int,
+        sort_by: str,
     ) -> list[Type[Photo]]:
         pass
 

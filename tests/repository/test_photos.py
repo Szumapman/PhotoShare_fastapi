@@ -87,6 +87,9 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.photo_mock.description = self.photo_info.description
         self.photo_mock.tags = [self.tag1, self.tag2]
 
+        self.skip = 0
+        self.limit = 10
+
     async def test_upload_photo_with_existing_tags(self):
         self.db.add(self.tag1)
         self.db.add(self.tag2)
@@ -242,8 +245,11 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER)
 
     async def test_get_photos_all_success(self):
-        self.db.query.return_value.all.return_value = [self.photo, self.photo_2]
-        photos_out = await self.repo.get_photos()
+        self.db.query.return_value.offset.return_value.limit.return_value.all.return_value = [
+            self.photo,
+            self.photo_2,
+        ]
+        photos_out = await self.repo.get_photos(self.skip, self.limit)
         assert len(photos_out) == 2
         assert photos_out[0].id == self.photo.id
         assert photos_out[0].user_id == self.user.id
@@ -251,31 +257,39 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         assert photos_out[1].user_id == self.user_2.id
 
     async def test_get_photos_with_query_success(self):
-        self.db.query.return_value.filter.return_value.all.return_value = [self.photo_2]
-        photos_out = await self.repo.get_photos(query="Another")
+        self.db.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = [
+            self.photo_2
+        ]
+        photos_out = await self.repo.get_photos(self.skip, self.limit, query="Another")
         assert len(photos_out) == 1
         assert photos_out[0].id == self.photo_2.id
         assert photos_out[0].description == self.photo_2.description
 
-        self.db.query.return_value.filter.return_value.all.return_value = [
+        self.db.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = [
             self.photo,
             self.photo_2,
         ]
-        photos_out = await self.repo.get_photos(query="tag")
+        photos_out = await self.repo.get_photos(self.skip, self.limit, query="tag")
         assert len(photos_out) == 2
 
     async def test_get_photos_with_user_id_success(self):
-        self.db.query.return_value.filter.return_value.all.return_value = [self.photo_2]
-        photos_out = await self.repo.get_photos(user_id=self.user_2.id)
+        self.db.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = [
+            self.photo_2
+        ]
+        photos_out = await self.repo.get_photos(
+            self.skip, self.limit, user_id=self.user_2.id
+        )
         assert len(photos_out) == 1
         assert photos_out[0].id == self.photo_2.id
         assert photos_out[0].user_id == self.user_2.id
 
     async def test_get_photos_with_user_id_and_query_success(self):
-        self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+        self.db.query.return_value.filter.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = [
             self.photo_2
         ]
         photos_out = await self.repo.get_photos(
+            self.skip,
+            self.limit,
             query="Another",
             user_id=self.user_2.id,
         )
@@ -287,27 +301,31 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
     async def test_get_photos_with_user_id_as_zero_or_non_exist_fail(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
         with self.assertRaises(NotFoundError) as e:
-            await self.repo.get_photos(user_id=0)
+            await self.repo.get_photos(self.skip, self.limit, user_id=0)
         self.assertEqual(e.exception.detail, USER_NOT_FOUND)
         with self.assertRaises(NotFoundError) as e:
-            await self.repo.get_photos(user_id=999)
+            await self.repo.get_photos(self.skip, self.limit, user_id=999)
         self.assertEqual(e.exception.detail, USER_NOT_FOUND)
 
     async def test_get_photos_with_sort_by_success(self):
-        self.db.query.return_value.order_by.return_value.all.return_value = [
+        self.db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
             self.photo_2,
             self.photo,
         ]
-        photos_out = await self.repo.get_photos(sort_by="upload_date-desc")
+        photos_out = await self.repo.get_photos(
+            self.skip, self.limit, sort_by="upload_date-desc"
+        )
         assert len(photos_out) == 2
         assert photos_out[0].id == self.photo_2.id
         assert photos_out[1].id == self.photo.id
 
-        self.db.query.return_value.order_by.return_value.all.return_value = [
+        self.db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
             self.photo,
             self.photo_2,
         ]
-        photos_out = await self.repo.get_photos(sort_by="upload_date-asc")
+        photos_out = await self.repo.get_photos(
+            self.skip, self.limit, sort_by="upload_date-asc"
+        )
         assert len(photos_out) == 2
         assert photos_out[0].id == self.photo.id
         assert photos_out[1].id == self.photo_2.id
