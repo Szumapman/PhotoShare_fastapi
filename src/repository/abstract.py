@@ -1,9 +1,9 @@
 import abc
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
-from src.database.models import User
+from src.database.models import User, Photo
 from src.schemas.photos import PhotoIn, PhotoOut
 
 
@@ -73,31 +73,31 @@ class AbstractPhotoRepo(abc.ABC):
         photo_info: PhotoIn,
         photo_url: str,
         qr_code_url: str,
-    ) -> PhotoOut:
+    ) -> Photo:
         pass
 
     @abc.abstractmethod
     async def get_photos(
         self, query: str, user_id: int, sort_by: str
-    ) -> list[PhotoOut]:
+    ) -> list[Type[Photo]]:
         pass
 
     @abc.abstractmethod
-    async def get_photo_by_id(self, photo_id: int) -> PhotoOut:
+    async def get_photo_by_id(self, photo_id: int) -> Photo:
         pass
 
     @abc.abstractmethod
-    async def delete_photo(self, photo_id: int, user_id: int) -> PhotoOut:
+    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
         pass
 
     @abc.abstractmethod
     async def update_photo(
         self, photo_id: int, photo_info: PhotoIn, user_id: int
-    ) -> PhotoOut:
+    ) -> Photo:
         pass
 
     @abc.abstractmethod
     async def add_transform_photo(
         self, photo_id: int, transform_params: list[str], transform_url: str
-    ) -> PhotoOut:
+    ) -> Photo:
         pass

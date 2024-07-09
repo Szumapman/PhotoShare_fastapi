@@ -1,3 +1,5 @@
+from typing import Type
+
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from src.conf.constant import (
@@ -10,7 +12,7 @@ from src.conf.constant import (
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.database.models import Photo, Tag, User
 from src.repository.abstract import AbstractPhotoRepo
-from src.schemas.photos import PhotoIn, PhotoOut, TransformIn
+from src.schemas.photos import PhotoIn
 from src.schemas.tags import TagIn
 
 
@@ -38,7 +40,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         photo_info: PhotoIn,
         photo_url: str,
         qr_code_url: str,
-    ) -> PhotoOut:
+    ) -> Photo:
         photo_tags = await self._set_tags(photo_info.tags)
         new_photo = Photo(
             user_id=current_user_id,
@@ -52,13 +54,13 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         self.db.refresh(new_photo)
         return new_photo
 
-    async def get_photo_by_id(self, photo_id: int) -> PhotoOut:
+    async def get_photo_by_id(self, photo_id: int) -> Photo:
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if not photo:
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
         return photo
 
-    async def delete_photo(self, photo_id: int, user_id: int) -> PhotoOut:
+    async def delete_photo(self, photo_id: int, user_id: int) -> Photo:
         user = self.db.query(User).filter(User.id == user_id).first()
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if photo is None:
@@ -71,7 +73,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
 
     async def update_photo(
         self, photo_id: int, photo_info: PhotoIn, user_id: int
-    ) -> PhotoOut:
+    ) -> Photo:
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if not photo:
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
@@ -89,7 +91,7 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         query: str | None = None,
         user_id: int | None = None,
         sort_by: str | None = None,
-    ) -> list[PhotoOut]:
+    ) -> list[Type[Photo]]:
         query_base = self.db.query(Photo)
         if query:
             query_base = query_base.filter(
@@ -119,11 +121,11 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                     else Photo.average_rating.asc()
                 )
         photos = query_base.all()
-        return [PhotoOut.model_validate(photo) for photo in photos]
+        return photos
 
     async def add_transform_photo(
         self, photo_id: int, transform_params: list[str], transformation_url: str
-    ) -> PhotoOut:
+    ) -> Photo:
         photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
         if not photo:
             raise NotFoundError(detail=PHOTO_NOT_FOUND)
