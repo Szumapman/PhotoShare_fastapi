@@ -201,9 +201,7 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(e.exception.detail, FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR)
 
     async def test_update_photo_success(self):
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            self.photo_mock
-        )
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo_mock)
         new_photo_no_tags = PhotoIn(
             description="New description",
         )
@@ -231,9 +229,7 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
 
     async def test_update_photo_fail_not_owner(self):
         self.user_mock.id = 999
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            self.photo_mock
-        )
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo_mock)
         new_photo_no_tags = PhotoIn(
             description="New description",
         )

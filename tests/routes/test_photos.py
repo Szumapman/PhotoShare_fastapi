@@ -6,6 +6,7 @@ import pytest
 from fastapi.security import HTTPAuthorizationCredentials
 from fastapi import status
 
+from src.schemas.tags import TagIn
 from src.services.auth import auth_service
 from src.database.models import User, RefreshToken, Photo
 from src.schemas.users import UserInfo, UserDb, UserIn
@@ -25,6 +26,7 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
     USER_NOT_FOUND,
     INVALID_SORT_TYPE,
+    FORBIDDEN_FOR_NOT_OWNER,
 )
 from tests.routes.conftest import (
     EMAIL_STANDARD,
@@ -161,6 +163,86 @@ def test_delete_by_moderator_fail(
         )
     assert response.status_code == status.HTTP_403_FORBIDDEN, response.text
     assert response.json()["detail"] == FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR
+
+
+def test_update_photo_success(
+    session, client_app, photo, photo_in_json, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    photo_in_new_data = PhotoIn(**photo_in_json)
+    photo_in_new_data.description = "new test description"
+    photo_in_new_data.tags = [
+        TagIn(name="new tag1 test"),
+        TagIn(name="new tag2 test"),
+    ]
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.patch(
+            f"{API}{PHOTOS}/{photo.id}",
+            json=photo_in_new_data.model_dump_json(),
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert data["id"] == photo.id
+    assert data["description"] == "new test description"
+    assert data["tags"][0]["name"] == "new tag1 test"
+    assert data["tags"][1]["name"] == "new tag2 test"
+
+
+def test_update_photo_fail_wrong_photo_id(
+    session, client_app, photo, photo_in_json, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    photo_in_new_data = PhotoIn(**photo_in_json)
+    photo_in_new_data.description = "new test description"
+    photo_in_new_data.tags = [
+        TagIn(name="new tag1 test"),
+        TagIn(name="new tag2 test"),
+    ]
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.patch(
+            f"{API}{PHOTOS}/-1",
+            json=photo_in_new_data.model_dump_json(),
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
+    assert response.json()["detail"] == PHOTO_NOT_FOUND
+
+
+def test_update_photo_fail_not_owner(
+    session, client_app, photo, photo_in_json, access_token_user_standard
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    photo_in_new_data = PhotoIn(**photo_in_json)
+    photo_in_new_data.description = "new test description"
+    photo_in_new_data.tags = [
+        TagIn(name="new tag1 test"),
+        TagIn(name="new tag2 test"),
+    ]
+    photo.user_id = 999
+    session.add(photo)
+    session.commit()
+    session.refresh(photo)
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.patch(
+            f"{API}{PHOTOS}/{photo.id}",
+            json=photo_in_new_data.model_dump_json(),
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_403_FORBIDDEN, response.text
+    assert response.json()["detail"] == FORBIDDEN_FOR_NOT_OWNER
 
 
 def test_get_photos_all_no_query_success(
