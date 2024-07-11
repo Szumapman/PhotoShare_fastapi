@@ -14,6 +14,7 @@ from src.conf.constant import (
     USER_NOT_FOUND,
     ROLE_ADMIN,
     ROLE_MODERATOR,
+    ROLE_STANDARD,
     FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
 )
 from src.conf.errors import NotFoundError, ForbiddenError
@@ -43,6 +44,7 @@ class PostgresUserRepo(AbstractUserRepo):
             username=user.username,
             email=user.email,
             password=user.password,
+            role=ROLE_STANDARD,
             avatar=avatar,
         )
         self.db.add(new_user)
