@@ -114,7 +114,7 @@ async def logout(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
-    return UserInfo(user=UserDb.from_orm(user), detail=USER_LOGOUT)
+    return UserInfo(user=UserDb.model_validate(user), detail=USER_LOGOUT)
 
 
 @router.get("/refresh_token", response_model=TokenModel)
