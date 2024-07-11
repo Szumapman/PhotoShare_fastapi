@@ -1,34 +1,25 @@
 from unittest.mock import patch
 
-import pytest
-from fastapi.security import HTTPAuthorizationCredentials
 from fastapi import status
 
-from src.services.auth import auth_service
-from src.database.models import User, RefreshToken
-from src.schemas.users import UserInfo, UserDb, UserIn
 from src.conf.constant import (
     USER_CREATED,
     AUTH,
     API,
-    ROLE_ADMIN,
-    ROLE_MODERATOR,
     ROLE_STANDARD,
     INCORRECT_USERNAME_OR_PASSWORD,
     BANNED_USER,
     COULD_NOT_VALIDATE_CREDENTIALS,
     INVALID_SCOPE,
-    TOKEN_NOT_FOUND,
     USER_LOGOUT,
     LOG_IN_AGAIN,
 )
+from src.database.models import User
+from src.services.auth import auth_service
 from tests.routes.conftest import (
     EMAIL_STANDARD,
     USERNAME_STANDARD,
-    PHOTO_URL,
-    QR_CODE_URL,
 )
-from src.repository.users import PostgresUserRepo
 
 
 def test_signup_success(client_app, user_in_standard_json):
