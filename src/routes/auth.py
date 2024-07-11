@@ -101,19 +101,10 @@ async def logout(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    try:
-        token = credentials.credentials
-        session_id = await auth_service.get_session_id_from_token(
-            token, current_user.email
-        )
-        user = await user_repo.logout_user(token, session_id, current_user)
-        await auth_service.delete_user_from_redis(user.email)
-    except UnauthorizedError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
-    except ForbiddenError as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
+    token = credentials.credentials
+    session_id = await auth_service.get_session_id_from_token(token, current_user.email)
+    user = await user_repo.logout_user(token, session_id, current_user)
+    await auth_service.delete_user_from_redis(user.email)
     return UserInfo(user=UserDb.model_validate(user), detail=USER_LOGOUT)
 
 
@@ -122,18 +113,10 @@ async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
-    try:
-        old_refresh_token = credentials.credentials
-        email = await auth_service.decode_refresh_token(old_refresh_token)
-        user = await user_repo.get_user_by_email(email)
-        if not user:
-            raise NotFoundError(detail=USER_NOT_FOUND)
-        await user_repo.delete_refresh_token(old_refresh_token, user.id)
-    except UnauthorizedError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.detail)
-    except NotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=e.detail,
-        )
+    old_refresh_token = credentials.credentials
+    email = await auth_service.decode_refresh_token(old_refresh_token)
+    user = await user_repo.get_user_by_email(email)
+    if not user:
+        raise NotFoundError(detail=USER_NOT_FOUND)
+    await user_repo.delete_refresh_token(old_refresh_token, user.id)
     return await __set_tokens(user, user_repo)
