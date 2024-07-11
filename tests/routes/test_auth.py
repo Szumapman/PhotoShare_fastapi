@@ -20,6 +20,8 @@ from src.conf.constant import (
     COULD_NOT_VALIDATE_CREDENTIALS,
     INVALID_SCOPE,
     TOKEN_NOT_FOUND,
+    USER_LOGOUT,
+    LOG_IN_AGAIN,
 )
 from tests.routes.conftest import (
     EMAIL_STANDARD,
@@ -163,3 +165,61 @@ def test_refresh_token_no_user(
         assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
         data = response.json()
         assert data["detail"] == "User not found"
+
+
+def test_logout_success(client_app, access_token_user_standard):
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{AUTH}/logout",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert data["detail"] == USER_LOGOUT
+
+
+def test_logout_fail_wrong_token(client_app, access_token_user_standard):
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{AUTH}/logout",
+            headers={"Authorization": f"Bearer {access_token_user_standard + 'wrong'}"},
+        )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED, response.text
+    data = response.json()
+    assert data["detail"] == COULD_NOT_VALIDATE_CREDENTIALS
+
+
+def test_logout_fail_user_already_logout(
+    session, client_app, access_token_user_standard
+):
+    user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        client_app.post(
+            f"{API}{AUTH}/logout",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+        response = client_app.post(
+            f"{API}{AUTH}/logout",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED, response.text
+    data = response.json()
+    assert data["detail"] == LOG_IN_AGAIN
+
+
+def test_logout_fail_user_baned(session, client_app, access_token_user_standard):
+    user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
+    user.is_active = False
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{AUTH}/logout",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_403_FORBIDDEN, response.text
+    data = response.json()
+    assert data["detail"] == BANNED_USER
