@@ -16,6 +16,7 @@ from src.conf.constant import (
     ROLE_MODERATOR,
     ROLE_STANDARD,
     FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
+    FORBIDDEN_FOR_NOT_OWNER,
 )
 from src.conf.errors import NotFoundError, ForbiddenError
 
@@ -68,7 +69,7 @@ class PostgresUserRepo(AbstractUserRepo):
         return user
 
     async def add_refresh_token(
-        self, user: User, token: str | None, expiration_date: datetime, session_id: str
+        self, user_id: int, token: str | None, expiration_date: datetime, session_id: str
     ) -> None:
         refresh_token = RefreshToken(
             refresh_token=token,
