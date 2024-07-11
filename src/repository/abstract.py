@@ -38,7 +38,11 @@ class AbstractUserRepo(abc.ABC):
 
     @abc.abstractmethod
     async def add_refresh_token(
-        self, user_id: int, token: str | None, expiration_date: datetime, session_id: str
+        self,
+        user_id: int,
+        token: str | None,
+        expiration_date: datetime,
+        session_id: str,
     ) -> None:
         pass
 

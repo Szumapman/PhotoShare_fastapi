@@ -40,7 +40,9 @@ async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
     refresh_token, expiration_date = await auth_service.create_refresh_token(
         data={"sub": user.email, "session_id": session_id}
     )
-    await user_repo.add_refresh_token(user.id, refresh_token, expiration_date, session_id)
+    await user_repo.add_refresh_token(
+        user.id, refresh_token, expiration_date, session_id
+    )
     return TokenModel(access_token=access_token, refresh_token=refresh_token)
 
 

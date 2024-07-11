@@ -69,11 +69,15 @@ class PostgresUserRepo(AbstractUserRepo):
         return user
 
     async def add_refresh_token(
-        self, user_id: int, token: str | None, expiration_date: datetime, session_id: str
+        self,
+        user_id: int,
+        token: str | None,
+        expiration_date: datetime,
+        session_id: str,
     ) -> None:
         refresh_token = RefreshToken(
             refresh_token=token,
-            user_id=user.id,
+            user_id=user_id,
             session_id=session_id,
             expires_at=expiration_date,
         )
