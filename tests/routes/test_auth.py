@@ -1,5 +1,4 @@
-from unittest.mock import Mock, MagicMock, patch
-from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 from fastapi.security import HTTPAuthorizationCredentials
