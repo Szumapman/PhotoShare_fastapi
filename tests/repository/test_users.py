@@ -4,11 +4,18 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from src.conf.errors import NotFoundError
+from src.conf.errors import NotFoundError, ForbiddenError
 from src.repository.users import PostgresUserRepo
-from src.database.models import User
-from src.conf.constant import ROLE_ADMIN, ROLE_STANDARD, ROLE_MODERATOR, USER_NOT_FOUND
-from src.schemas.users import UserIn
+from src.database.models import User, RefreshToken, LogoutAccessToken
+from src.conf.constant import (
+    ROLE_ADMIN,
+    ROLE_STANDARD,
+    ROLE_MODERATOR,
+    USER_NOT_FOUND,
+    TOKEN_NOT_FOUND,
+    FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT,
+)
+from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 
 
 class TestUsers(unittest.IsolatedAsyncioTestCase):
@@ -55,6 +62,20 @@ class TestUsers(unittest.IsolatedAsyncioTestCase):
             email="new@email.com",
             password="P@ssword1",
         )
+        self.refresh_token = RefreshToken(
+            id=1,
+            refresh_token="token",
+            user_id=self.user_standard.id,
+            session_id="session_id",
+            expires_at=datetime(2024, 5, 15, 10, 15, 00, 00),
+        )
+        self.logout_access_token = LogoutAccessToken(
+            id=1,
+            logout_access_token="logout_access_token",
+            expires_at=datetime(2024, 5, 15, 10, 15, 00, 00),
+        )
+        self.active_status = ActiveStatus(is_active=False)
+        self.user_role_in = UserRoleIn(role=ROLE_MODERATOR)
 
     async def test_get_user_by_email_success(self):
         self.db.query().filter().first.return_value = self.user_admin
@@ -123,3 +144,113 @@ class TestUsers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.email, self.new_user_in.email)
         self.assertEqual(result.role, self.user_admin.role)
         self.assertIsInstance(result, User)
+
+    async def test_update_user_fail(self):
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.update_user(
+                self.new_user_in,
+                999,
+            )
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+
+    async def test_delete_user_success(self):
+        self.db.query().filter().first.return_value = self.user_standard
+        result = await self.user_repo.delete_user(self.user_standard.id)
+        self.assertEqual(result, self.user_standard)
+
+    async def test_delete_user_fail(self):
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.delete_user(999)
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+
+    async def test_add_refresh_token_success(self):
+        result = await self.user_repo.add_refresh_token(
+            1, "refresh_token", datetime.utcnow(), "session_id"
+        )
+        self.assertEqual(result, None)
+
+    async def test_delete_refresh_token_success(self):
+        self.db.query().filter().first.return_value = self.refresh_token
+        result = await self.user_repo.delete_refresh_token(
+            self.refresh_token.refresh_token, self.user_admin.id
+        )
+        self.assertEqual(result, None)
+
+    async def test_delete_refresh_token_fail(self):
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.delete_refresh_token("wrong_token", self.user_admin.id)
+        self.assertEqual(e.exception.detail, TOKEN_NOT_FOUND)
+
+    async def test_logout_user_success(self):
+        self.db.query().filter().first.return_value = self.refresh_token
+        result = await self.user_repo.logout_user(
+            self.refresh_token.refresh_token,
+            self.refresh_token.session_id,
+            self.user_standard,
+        )
+        self.assertEqual(result, self.user_standard)
+
+    async def test_logout_user_fail(self):
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.logout_user(
+                "wrong_token",
+                "wrong_session_id",
+                self.user_standard,
+            )
+        self.assertEqual(e.exception.detail, TOKEN_NOT_FOUND)
+
+    async def test_is_user_logout(self):
+        self.db.query().filter().first.return_value = self.logout_access_token
+        result = await self.user_repo.is_user_logout(
+            self.logout_access_token.logout_access_token
+        )
+        self.assertEqual(result, self.logout_access_token)
+
+        self.db.query().filter().first.return_value = None
+        result = await self.user_repo.is_user_logout("wrong_token")
+        self.assertEqual(result, None)
+
+    async def test_set_user_active_status_success(self):
+        self.db.query().filter().first.return_value = self.user_standard
+        result = await self.user_repo.set_user_active_status(
+            self.user_standard.id,
+            self.active_status,
+            self.user_moderator,
+        )
+        self.assertEqual(result, self.user_standard)
+        self.assertEqual(result.is_active, False)
+
+    async def test_set_user_active_status_fail(self):
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.set_user_active_status(
+                999,
+                self.active_status,
+                self.user_moderator,
+            )
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+
+    async def test_set_user_active_status_fail_for_admin_user_carry_out_by_moderator(
+        self,
+    ):
+        self.db.query().filter().first.return_value = self.user_admin
+        with self.assertRaises(ForbiddenError) as e:
+            await self.user_repo.set_user_active_status(
+                self.user_admin.id,
+                self.active_status,
+                self.user_moderator,
+            )
+        self.assertEqual(e.exception.detail, FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT)
+
+    async def test_set_user_role_success(self):
+        self.db.query().filter().first.return_value = self.user_standard
+        result = await self.user_repo.set_user_role(
+            self.user_standard.id,
+            self.user_role_in,
+        )
+        self.assertEqual(result, self.user_standard)
+        self.assertEqual(result.role, ROLE_MODERATOR)
