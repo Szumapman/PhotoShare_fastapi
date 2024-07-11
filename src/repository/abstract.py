@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Optional, Type
+from typing import Type
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User, Photo
@@ -21,7 +21,7 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_users(self) -> list[User]:
+    async def get_users(self) -> list[Type[User]]:
         pass
 
     @abc.abstractmethod

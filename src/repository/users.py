@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Type
 
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -34,7 +35,7 @@ class PostgresUserRepo(AbstractUserRepo):
             raise NotFoundError(detail=USER_NOT_FOUND)
         return user
 
-    async def get_users(self) -> list[User]:
+    async def get_users(self) -> list[Type[User]]:
         return self.db.query(User).all()
 
     async def create_user(self, user: UserIn, avatar: str) -> User:
@@ -50,7 +51,7 @@ class PostgresUserRepo(AbstractUserRepo):
         return new_user
 
     async def update_user(self, new_user_data: UserIn, user_id: int) -> User:
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = await self.get_user_by_id(user_id)
         user.username = new_user_data.username
         user.email = new_user_data.email
         user.password = new_user_data.password
@@ -59,9 +60,7 @@ class PostgresUserRepo(AbstractUserRepo):
         return user
 
     async def delete_user(self, user_id: int) -> User:
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if user is None:
-            raise NotFoundError(detail=USER_NOT_FOUND)
+        user = await self.get_user_by_id(user_id)
         self.db.delete(user)
         self.db.commit()
         return user
@@ -123,8 +122,6 @@ class PostgresUserRepo(AbstractUserRepo):
         self, user_id: int, active_status: ActiveStatus, current_user: User
     ) -> User:
         user = await self.get_user_by_id(user_id)
-        if user is None:
-            raise NotFoundError(detail=USER_NOT_FOUND)
         if user.role == ROLE_ADMIN and current_user.role == ROLE_MODERATOR:
             raise ForbiddenError(detail=FORBIDDEN_OPERATION_ON_ADMIN_ACCOUNT)
         user.is_active = active_status.is_active
@@ -134,8 +131,6 @@ class PostgresUserRepo(AbstractUserRepo):
 
     async def set_user_role(self, user_id: int, role: UserRoleIn) -> User:
         user = await self.get_user_by_id(user_id)
-        if user is None:
-            raise NotFoundError(detail=USER_NOT_FOUND)
         user.role = role.role
         self.db.commit()
         self.db.refresh(user)
