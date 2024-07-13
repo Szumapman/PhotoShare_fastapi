@@ -62,6 +62,13 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.refresh(user)
         return user
 
+    async def update_user_avatar(self, user_id: int, new_avatar_url: str) -> User:
+        user = await self.get_user_by_id(user_id)
+        user.avatar = new_avatar_url
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
     async def delete_user(self, user_id: int) -> User:
         user = await self.get_user_by_id(user_id)
         self.db.delete(user)

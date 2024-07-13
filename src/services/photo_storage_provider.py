@@ -11,6 +11,7 @@ from src.conf.config import settings
 from src.conf.constant import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
     CLOUDINARY_QR_PUBLIC_ID_PREFIX,
+    CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX, AVATAR_WIDTH, AVATAR_HEIGHT,
 )
 from src.conf.logger import logger
 from src.conf.errors import PhotoStorageProviderError, NotFoundError
@@ -26,25 +27,37 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         )
         self.cloudinary = cloudinary
 
-    async def _upload(self, file, qr_code=False) -> str:
-        public_id_prefix = (
-            CLOUDINARY_QR_PUBLIC_ID_PREFIX
-            if qr_code
-            else CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX
-        )
+    async def _upload(self, file, prefix: str) -> str:
+        public_id_prefix = prefix
         try:
             upload_result = self.cloudinary.uploader.upload(
                 file,
                 public_id_prefix=public_id_prefix,
                 overwrite=True,
             )
+            if prefix == CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX:
+                print(upload_result.get("public_id"))
+                return (
+                    cloudinary.CloudinaryImage(
+                        upload_result.get("public_id")
+                    ).build_url(
+                        width=AVATAR_WIDTH,
+                        height=AVATAR_HEIGHT,
+                        crop="fill",
+                        version=upload_result.get("version"),
+                    )
+                    + ".jpg"
+                )
             return upload_result["secure_url"]
         except Exception as e:
             logger.error(e)
             raise PhotoStorageProviderError(e)
 
     async def upload_photo(self, photo: File) -> str:
-        return await self._upload(photo.file)
+        return await self._upload(photo.file, CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX)
+
+    async def upload_avatar(self, avatar: File) -> str:
+        return await self._upload(avatar.file, CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX)
 
     async def create_qr_code(self, photo_url: str) -> str:
         qr = qrcode.QRCode(
@@ -59,7 +72,7 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         qr_buffer = BytesIO()
         qr_img.save(qr_buffer, format="PNG")
         qr_buffer.seek(0)
-        return await self._upload(qr_buffer, qr_code=True)
+        return await self._upload(qr_buffer, CLOUDINARY_QR_PUBLIC_ID_PREFIX)
 
     async def delete_photo(self, photo_url: str, qr_url: str):
         try:

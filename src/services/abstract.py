@@ -28,6 +28,10 @@ class AbstractPhotoStorageProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def upload_avatar(self, avatar: File) -> str:
+        pass
+
+    @abc.abstractmethod
     async def create_qr_code(self, photo_url: str) -> str:
         pass
 

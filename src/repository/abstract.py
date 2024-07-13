@@ -33,6 +33,10 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def update_user_avatar(self, user_id: int, new_avatar_url: str) -> User:
+        pass
+
+    @abc.abstractmethod
     async def delete_user(self, user_id: int) -> User:
         pass
 

@@ -1,16 +1,17 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 
 from src.services.auth import auth_service
-from src.database.dependencies import get_user_repository, get_password_handler
+from src.database.dependencies import (
+    get_user_repository,
+    get_password_handler,
+    get_photo_storage_provider,
+)
 from src.conf.constant import (
     USERS,
     ROLE_ADMIN,
     ROLE_MODERATOR,
-    HTTP_404_NOT_FOUND_DETAILS,
-    HTTP_403_FORBIDDEN_DETAILS,
     FORBIDDEN_FOR_USER,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
-    USER_NOT_FOUND,
     USERNAME_EXISTS,
     EMAIL_EXISTS,
     USER_UPDATE,
@@ -27,7 +28,8 @@ from src.schemas.users import (
 )
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
-from src.services.abstract import AbstractPasswordHandler
+from src.services.abstract import AbstractPasswordHandler, AbstractPhotoStorageProvider
+
 from src.conf.errors import NotFoundError, ForbiddenError, UnauthorizedError
 
 router = APIRouter(prefix=USERS, tags=["users"])
@@ -106,6 +108,21 @@ async def update_user(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.detail)
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
+
+
+@router.patch("/avatar", response_model=UserInfo)
+async def update_user_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(auth_service.get_current_user),
+    user_repo: AbstractUserRepo = Depends(get_user_repository),
+    photo_storage_provider: AbstractPhotoStorageProvider = Depends(
+        get_photo_storage_provider
+    ),
+):
+    new_avatar_url = await photo_storage_provider.upload_avatar(file)
+    user = await user_repo.update_user_avatar(current_user.id, new_avatar_url)
+    await auth_service.update_user_in_redis(user.email, user)
+    return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)
 
 
 @router.delete("/{user_id}", response_model=UserInfo)
