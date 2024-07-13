@@ -11,7 +11,9 @@ from src.conf.config import settings
 from src.conf.constant import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
     CLOUDINARY_QR_PUBLIC_ID_PREFIX,
-    CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX, AVATAR_WIDTH, AVATAR_HEIGHT,
+    CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX,
+    AVATAR_WIDTH,
+    AVATAR_HEIGHT,
 )
 from src.conf.logger import logger
 from src.conf.errors import PhotoStorageProviderError, NotFoundError
