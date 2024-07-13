@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 
 from src.services.auth import auth_service
@@ -46,7 +48,7 @@ async def get_users(
     if current_user.role == ROLE_ADMIN:
         return [UserDb.model_validate(user) for user in users]
     elif current_user.role == ROLE_MODERATOR:
-        return [UserModeratorView.from_orm(user) for user in users]
+        return [UserModeratorView.model_validate(user) for user in users]
     return [UserPublic.model_validate(user) for user in users]
 
 
@@ -76,7 +78,7 @@ async def update_user(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail=USERNAME_EXISTS
             )
-    elif new_user_data.email != current_user.email:
+    if new_user_data.email != current_user.email:
         if await user_repo.get_user_by_email(new_user_data.email):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail=EMAIL_EXISTS
@@ -96,6 +98,8 @@ async def update_user_avatar(
         get_photo_storage_provider
     ),
 ):
+    if not file:
+        print("No file")
     new_avatar_url = await photo_storage_provider.upload_avatar(file)
     user = await user_repo.update_user_avatar(current_user.id, new_avatar_url)
     await auth_service.update_user_in_redis(user.email, user)
