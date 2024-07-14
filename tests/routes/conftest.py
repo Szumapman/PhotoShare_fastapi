@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import File
+from fastapi.responses import StreamingResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -13,11 +14,12 @@ from src.database.dependencies import (
     get_avatar_provider,
     get_photo_repository,
     get_photo_storage_provider,
+    get_qr_code_provider,
 )
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.schemas.photos import PhotoOut, TransformIn
-from src.services.abstract import AbstractPhotoStorageProvider
+from src.services.abstract import AbstractPhotoStorageProvider, AbstractQrCodeProvider
 from src.services.avatar import AvatarProviderGravatar
 from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, API, AUTH
 
@@ -39,6 +41,8 @@ PASSWORD = "Password1!"
 
 PHOTO_URL = "test_photo_url"
 AVATAR_URL = "test_avatar_url"
+TRANSFORM_PHOTO_URL = "test_transform_photo_url"
+TRANSFORM_PARAMS = ["param1", "param2"]
 
 
 @pytest.fixture(scope="module")
@@ -224,4 +228,4 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def transform_photo(
         self, photo_url: str, transform: TransformIn
     ) -> (str, list[str]):
-        pass
+        return TRANSFORM_PHOTO_URL, TRANSFORM_PARAMS

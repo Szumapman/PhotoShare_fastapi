@@ -395,3 +395,65 @@ def test_get_photos_wrong_sort_by_text_fail(
         )
     assert response.status_code == status.HTTP_502_BAD_GATEWAY, response.text
     assert response.json()["detail"] == INVALID_SORT_TYPE
+
+
+def test_get_qr_code_success(
+    session,
+    client_app,
+    photo,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}/{photo.id}/qr_code",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    assert response.headers["Content-Type"] == "image/png"
+
+
+def test_get_qr_code_with_transform_id_success(
+    session,
+    client_app,
+    photo,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    photo.transformations = {"1": ["transformed_url.jpg"]}
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}/{photo.id}/qr_code?transform_id=1",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    assert response.headers["Content-Type"] == "image/png"
+
+
+def test_get_qr_code_with_invalid_transform_id_fail(
+    session,
+    client_app,
+    photo,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    photo.transformations = {"1": ["transformed_url.jpg"]}
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}/{photo.id}/qr_code?transform_id=2",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "No data found for transformation id: 2"
