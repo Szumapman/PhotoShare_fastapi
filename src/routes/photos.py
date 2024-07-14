@@ -88,7 +88,7 @@ async def get_qr_code(
     photo_id: int,
     transform_id: int | None = Query(
         None,
-        description="Transform id to apply to the qr code",
+        description="Photo transformation id to apply to get the qr code",
     ),
     current_user: UserDb = Depends(auth_service.get_current_user),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
