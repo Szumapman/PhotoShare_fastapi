@@ -35,9 +35,10 @@ USERNAME_MODERATOR = "test moderator"
 EMAIL_STANDARD = "test@email.com"
 EMAIL_ADMIN = "test_admin@email.com"
 EMAIL_MODERATOR = "test_moderator@email.com"
-PASSWORD_STANDARD = "Password1!"
+PASSWORD = "Password1!"
 
 PHOTO_URL = "test_photo_url"
+AVATAR_URL = "test_avatar_url"
 QR_CODE_URL = "test_qr_code_url"
 
 
@@ -91,7 +92,7 @@ def user_in_standard_json():
     return {
         "username": USERNAME_STANDARD,
         "email": EMAIL_STANDARD,
-        "password": PASSWORD_STANDARD,
+        "password": PASSWORD,
     }
 
 
@@ -100,7 +101,7 @@ def user_in_admin_json():
     return {
         "username": USERNAME_ADMIN,
         "email": EMAIL_ADMIN,
-        "password": PASSWORD_STANDARD,
+        "password": PASSWORD,
     }
 
 
@@ -109,7 +110,7 @@ def user_in_moderator_json():
     return {
         "username": USERNAME_MODERATOR,
         "email": EMAIL_MODERATOR,
-        "password": PASSWORD_STANDARD,
+        "password": PASSWORD,
     }
 
 
@@ -122,7 +123,7 @@ def tokens(session, client_app):
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_STANDARD,
-            "password": PASSWORD_STANDARD,
+            "password": PASSWORD,
         },
     )
     data = response.json()
@@ -136,7 +137,7 @@ def access_token_user_standard(session, client_app, user_in_standard_json):
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_STANDARD,
-            "password": PASSWORD_STANDARD,
+            "password": PASSWORD,
         },
     )
     data = response.json()
@@ -150,10 +151,16 @@ def access_token_user_admin(session, client_app, user_in_admin_json):
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_ADMIN,
-            "password": PASSWORD_STANDARD,
+            "password": PASSWORD,
         },
     )
     data = response.json()
+    session.query(User).filter(User.email == EMAIL_ADMIN).update(
+        {
+            "role": ROLE_ADMIN,
+            "is_active": True,
+        }
+    )
     return data["access_token"]
 
 
@@ -164,10 +171,16 @@ def access_token_user_moderator(session, client_app, user_in_moderator_json):
         f"{API}{AUTH}/login",
         data={
             "username": EMAIL_MODERATOR,
-            "password": PASSWORD_STANDARD,
+            "password": PASSWORD,
         },
     )
     data = response.json()
+    session.query(User).filter(User.email == EMAIL_MODERATOR).update(
+        {
+            "role": ROLE_MODERATOR,
+            "is_active": True,
+        }
+    )
     return data["access_token"]
 
 
@@ -204,6 +217,9 @@ def photo_2():
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_photo(self, photo: File) -> str:
         return PHOTO_URL
+
+    async def upload_avatar(self, avatar: File) -> str:
+        return AVATAR_URL
 
     async def create_qr_code(self, photo_url: str) -> str:
         return QR_CODE_URL

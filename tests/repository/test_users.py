@@ -154,6 +154,23 @@ class TestUsers(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual(e.exception.detail, USER_NOT_FOUND)
 
+    async def test_update_user_avatar_success(self):
+        new_avatar_url = "new_avatar_url"
+        self.db.query().filter().first.return_value = self.user_standard
+        result = await self.user_repo.update_user_avatar(
+            self.user_standard.id, new_avatar_url
+        )
+        self.assertEqual(result.avatar, new_avatar_url)
+        self.assertEqual(result.username, self.user_standard.username)
+        self.assertIsInstance(result, User)
+
+    async def test_update_user_avatar_fail(self):
+        new_avatar_url = "new_avatar_url"
+        self.db.query().filter().first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.user_repo.update_user_avatar(999, new_avatar_url)
+        self.assertEqual(e.exception.detail, USER_NOT_FOUND)
+
     async def test_delete_user_success(self):
         self.db.query().filter().first.return_value = self.user_standard
         result = await self.user_repo.delete_user(self.user_standard.id)
