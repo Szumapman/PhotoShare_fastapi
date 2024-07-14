@@ -80,7 +80,6 @@ class AbstractPhotoRepo(abc.ABC):
         current_user_id: int,
         photo_info: PhotoIn,
         photo_url: str,
-        qr_code_url: str,
     ) -> Photo:
         pass
 

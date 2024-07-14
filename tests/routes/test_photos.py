@@ -31,7 +31,6 @@ from src.conf.constant import (
 from tests.routes.conftest import (
     EMAIL_STANDARD,
     PHOTO_URL,
-    QR_CODE_URL,
     EMAIL_ADMIN,
     EMAIL_MODERATOR,
 )
@@ -53,7 +52,6 @@ def test_create_photo_success(client_app, photo_in_json, access_token_user_stand
         assert response.status_code == status.HTTP_201_CREATED, response.text
         data = response.json()
         assert data["photo_url"] == PHOTO_URL
-        assert data["qr_url"] == QR_CODE_URL
         assert "id" in data
 
 
@@ -72,7 +70,6 @@ def test_get_photo_success(session, client_app, photo, access_token_user_standar
     data = response.json()
     assert data["id"] == photo.id
     assert data["photo_url"] == PHOTO_URL
-    assert data["qr_url"] == QR_CODE_URL
 
 
 def test_get_photo_fail(session, client_app, access_token_user_standard):

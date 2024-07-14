@@ -39,7 +39,6 @@ PASSWORD = "Password1!"
 
 PHOTO_URL = "test_photo_url"
 AVATAR_URL = "test_avatar_url"
-QR_CODE_URL = "test_qr_code_url"
 
 
 @pytest.fixture(scope="module")
@@ -198,7 +197,6 @@ def photo():
         id=1,
         description="test description",
         photo_url=PHOTO_URL,
-        qr_url=QR_CODE_URL,
         user_id=1,
     )
 
@@ -209,7 +207,6 @@ def photo_2():
         id=2,
         description="another text",
         photo_url=PHOTO_URL,
-        qr_url=QR_CODE_URL,
         user_id=2,
     )
 
@@ -221,13 +218,10 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_avatar(self, avatar: File) -> str:
         return AVATAR_URL
 
-    async def create_qr_code(self, photo_url: str) -> str:
-        return QR_CODE_URL
-
-    async def delete_photo(self, photo_url: str, qr_url: str) -> None:
+    async def delete_photo(self, photo_url: str) -> None:
         pass
 
     async def transform_photo(
-        self, photo: PhotoOut, transform: TransformIn
+        self, photo_url: str, transform: TransformIn
     ) -> (str, list[str]):
         pass

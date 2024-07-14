@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import AsyncMock, MagicMock, call, patch, Mock
+from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -23,7 +23,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.db = MagicMock(spec=Session)
         self.repo = PostgresPhotoRepo(self.db)
         self.photo_url = "https://example.com/photo.jpg"
-        self.qr_code_url = "https://example.com/qr.png"
         self.tag1_in = TagIn(name="tag1")
         self.tag2_in = TagIn(name="tag2")
         self.tag1 = Tag(name="tag1")
@@ -65,7 +64,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             id=1,
             user_id=self.user.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             uploaded_at=datetime(year=2024, month=1, day=1),
             description=self.photo_info.description,
             tags=[Tag(id=1, name="tag_1"), Tag(id=2, name="tag_2")],
@@ -74,7 +72,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             id=2,
             user_id=self.user_2.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             uploaded_at=datetime(year=2024, month=2, day=2),
             description="Another description",
             tags=[Tag(id=1, name="tag_1")],
@@ -83,7 +80,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         self.photo_mock.id = 1
         self.photo_mock.user_id = self.user_mock.id
         self.photo_mock.photo_url = self.photo_url
-        self.photo_mock.qr_url = self.qr_code_url
         self.photo_mock.description = self.photo_info.description
         self.photo_mock.tags = [self.tag1, self.tag2]
 
@@ -98,19 +94,17 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         new_photo = Photo(
             user_id=self.user.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             description=self.photo_info.description,
             tags=[self.tag1, self.tag2],
         )
         self.db.add.return_value = new_photo
 
         photo = await self.repo.upload_photo(
-            self.user.id, self.photo_info, self.photo_url, self.qr_code_url
+            self.user.id, self.photo_info, self.photo_url
         )
 
         assert photo.user_id == self.user.id
         assert photo.photo_url == self.photo_url
-        assert photo.qr_url == self.qr_code_url
         assert photo.description == "Test photo"
         assert len(photo.tags) == 2
 
@@ -118,19 +112,17 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         new_photo = Photo(
             user_id=self.user.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             description=self.photo_info.description,
             tags=[self.tag1, self.tag2],
         )
         self.db.add.return_value = new_photo
 
         photo = await self.repo.upload_photo(
-            self.user.id, self.photo_info, self.photo_url, self.qr_code_url
+            self.user.id, self.photo_info, self.photo_url
         )
 
         assert photo.user_id == self.user.id
         assert photo.photo_url == self.photo_url
-        assert photo.qr_url == self.qr_code_url
         assert photo.description == "Test photo"
         assert len(photo.tags) == 2
 
@@ -139,18 +131,14 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         new_photo = Photo(
             user_id=self.user.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             description=self.photo_info.description,
             tags=[],
         )
         self.db.add.return_value = new_photo
-        photo = await self.repo.upload_photo(
-            self.user.id, photo_info, self.photo_url, self.qr_code_url
-        )
+        photo = await self.repo.upload_photo(self.user.id, photo_info, self.photo_url)
 
         assert photo.user_id == self.user.id
         assert photo.photo_url == self.photo_url
-        assert photo.qr_url == self.qr_code_url
         assert photo.description == "Test photo"
         assert len(photo.tags) == 0
 
@@ -159,7 +147,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             id=1,
             user_id=self.user.id,
             photo_url=self.photo_url,
-            qr_url=self.qr_code_url,
             description=self.photo_info.description,
             tags=[self.tag1, self.tag2],
         )
@@ -167,7 +154,6 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         photo_out = await self.repo.get_photo_by_id(1)
         assert photo_out.user_id == self.user.id
         assert photo_out.photo_url == self.photo_url
-        assert photo_out.qr_url == self.qr_code_url
         assert photo_out.description == self.photo_info.description
         assert len(photo_out.tags) == 2
 

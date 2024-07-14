@@ -39,13 +39,11 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         current_user_id: int,
         photo_info: PhotoIn,
         photo_url: str,
-        qr_code_url: str,
     ) -> Photo:
         photo_tags = await self._set_tags(photo_info.tags)
         new_photo = Photo(
             user_id=current_user_id,
             photo_url=photo_url,
-            qr_url=qr_code_url,
             description=photo_info.description,
             tags=photo_tags,
         )
@@ -123,13 +121,19 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
     async def add_transform_photo(
         self, photo_id: int, transform_params: list[str], transformation_url: str
     ) -> Photo:
-        photo = self.db.query(Photo).filter(Photo.id == photo_id).first()
-        if not photo:
-            raise NotFoundError(detail=PHOTO_NOT_FOUND)
+        photo = await self.get_photo_by_id(photo_id)
         transformations = photo.transformations or {}
         photo.transformations = None
         self.db.commit()
-        transformations[transformation_url] = transform_params
+        if len(transformations) == 0:
+            key = 1
+        else:
+            max_value = 0
+            for key in transformations:
+                if int(key) > max_value:
+                    max_value = int(key)
+            key = max_value + 1
+        transformations[key] = [transformation_url, transform_params]
         photo.transformations = transformations
         self.db.commit()
         self.db.refresh(photo)

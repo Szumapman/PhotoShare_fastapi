@@ -44,7 +44,6 @@ class PhotoIn(BaseModel):
 class PhotoCreated(PhotoIn):
     id: int
     photo_url: str
-    qr_url: str
     uploaded_at: datetime
 
 
@@ -52,7 +51,6 @@ class PhotoOut(PhotoIn):
     id: int
     user_id: int
     photo_url: str
-    qr_url: str
     transformations: dict[str, list] | None = None
     uploaded_at: datetime
     tags: list[TagOut] | None = None

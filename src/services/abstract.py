@@ -32,15 +32,17 @@ class AbstractPhotoStorageProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def create_qr_code(self, photo_url: str) -> str:
-        pass
-
-    @abc.abstractmethod
-    async def delete_photo(self, photo_url: str, qr_url: str):
+    async def delete_photo(self, photo_url: str):
         pass
 
     @abc.abstractmethod
     async def transform_photo(
-        self, photo: PhotoOut, transform: TransformIn
+        self, photo_url: str, transform: TransformIn
     ) -> (str, list[str]):
+        pass
+
+
+class AbstractQrCodeProvider(abc.ABC):
+    @abc.abstractmethod
+    async def stream_qr_code(self, url: str):
         pass

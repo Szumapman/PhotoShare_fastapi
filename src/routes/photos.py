@@ -7,15 +7,19 @@ from fastapi import (
     status,
     Query,
 )
+from fastapi.responses import StreamingResponse
 
-from src.conf.errors import ForbiddenError
+from src.conf.errors import ForbiddenError, NotFoundError
 from src.schemas.users import UserDb
 from src.schemas.photos import PhotoOut, PhotoIn, PhotoCreated, TransformIn
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractPhotoRepo
-from src.services.abstract import AbstractPhotoStorageProvider
-from src.database.dependencies import get_photo_repository
-from src.database.dependencies import get_photo_storage_provider
+from src.services.abstract import AbstractPhotoStorageProvider, AbstractQrCodeProvider
+from src.database.dependencies import (
+    get_photo_repository,
+    get_photo_storage_provider,
+    get_qr_code_provider,
+)
 from src.conf.constant import (
     PHOTOS,
     PHOTO_SEARCH_ENUMS,
@@ -61,12 +65,10 @@ async def create_photo(
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
     photo_url = await photo_storage_provider.upload_photo(photo)
-    qr_code_url = await photo_storage_provider.create_qr_code(photo_url)
     uploaded_photo = await photo_repo.upload_photo(
         current_user.id,
         photo_info,
         photo_url,
-        qr_code_url,
     )
     return uploaded_photo
 
@@ -81,6 +83,30 @@ async def get_photo(
     return photo
 
 
+@router.get("/{photo_id}/qr_code", response_class=StreamingResponse)
+async def get_qr_code(
+    photo_id: int,
+    transform_id: int | None = Query(
+        None,
+        description="Transform id to apply to the qr code",
+    ),
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+    qr_code_provider: AbstractQrCodeProvider = Depends(get_qr_code_provider),
+):
+    photo = await photo_repo.get_photo_by_id(photo_id)
+    if transform_id:
+        try:
+            photo_url = photo.transformations[str(transform_id)][0]
+        except KeyError:
+            raise NotFoundError(
+                detail=f"No data found for transformation id: {transform_id}"
+            )
+    else:
+        photo_url = photo.photo_url
+    return await qr_code_provider.stream_qr_code(photo_url)
+
+
 @router.delete("/{photo_id}", response_model=PhotoOut)
 async def delete_photo(
     photo_id: int,
@@ -91,7 +117,7 @@ async def delete_photo(
     ),
 ):
     photo = await photo_repo.delete_photo(photo_id, current_user.id, current_user.role)
-    await photo_storage_provider.delete_photo(photo.photo_url, photo.qr_url)
+    await photo_storage_provider.delete_photo(photo.photo_url)
     return photo
 
 
@@ -120,7 +146,7 @@ async def transform_photo(
     if photo.user_id != current_user.id:
         raise ForbiddenError(detail=FORBIDDEN_FOR_NOT_OWNER)
     transform_url, transform_params = await photo_storage_provider.transform_photo(
-        photo, transform
+        photo.photo_url, transform
     )
     photo = await photo_repo.add_transform_photo(
         photo_id, transform_params, transform_url

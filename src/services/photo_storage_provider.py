@@ -3,14 +3,12 @@ from io import BytesIO
 import cloudinary
 import cloudinary.uploader
 from fastapi import File
-import qrcode
 
 from src.services.abstract import AbstractPhotoStorageProvider
 from src.schemas.photos import PhotoOut, TransformIn
 from src.conf.config import settings
 from src.conf.constant import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
-    CLOUDINARY_QR_PUBLIC_ID_PREFIX,
     CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX,
     AVATAR_WIDTH,
     AVATAR_HEIGHT,
@@ -61,33 +59,16 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_avatar(self, avatar: File) -> str:
         return await self._upload(avatar.file, CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX)
 
-    async def create_qr_code(self, photo_url: str) -> str:
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(photo_url)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white")
-        qr_buffer = BytesIO()
-        qr_img.save(qr_buffer, format="PNG")
-        qr_buffer.seek(0)
-        return await self._upload(qr_buffer, CLOUDINARY_QR_PUBLIC_ID_PREFIX)
-
-    async def delete_photo(self, photo_url: str, qr_url: str):
+    async def delete_photo(self, photo_url: str):
         try:
             photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo_url.split('/')[-1].split('.')[0]}"
             cloudinary.uploader.destroy(photo_public_id, invalidate=True)
-            qrcode_public_id = f"{CLOUDINARY_QR_PUBLIC_ID_PREFIX}/{qr_url.split('/')[-1].split('.')[0]}"
-            cloudinary.uploader.destroy(qrcode_public_id, invalidate=True)
         except Exception as e:
             logger.error(e)
             raise PhotoStorageProviderError(detail="Photo storage provider error")
 
     async def transform_photo(
-        self, photo: PhotoOut, transform: TransformIn
+        self, photo_url: str, transform: TransformIn
     ) -> (str, list[str]):
         """
         Function to perform transformations on a photo.
@@ -118,7 +99,7 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
                 raise NotFoundError(
                     detail="No valid transformation parameters were provided.",
                 )
-            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo.photo_url.split('/')[-1].split('.')[0]}"
+            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo_url.split('/')[-1].split('.')[0]}"
             transform_url = cloudinary.utils.cloudinary_url(
                 photo_public_id, transformation=params
             )[0]
