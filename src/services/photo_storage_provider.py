@@ -36,7 +36,6 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
                 overwrite=True,
             )
             if prefix == CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX:
-                print(upload_result.get("public_id"))
                 return (
                     cloudinary.CloudinaryImage(
                         upload_result.get("public_id")
@@ -53,6 +52,14 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
             logger.error(e)
             raise PhotoStorageProviderError(e)
 
+    async def _delete(self, prefix: str, file_url: str):
+        try:
+            file_public_id = f"{prefix}/{file_url.split('/')[-1].split('.')[0]}"
+            self.cloudinary.uploader.destroy(file_public_id, invalidate=True)
+        except Exception as e:
+            logger.error(e)
+            raise PhotoStorageProviderError(detail="Photo storage provider error")
+
     async def upload_photo(self, photo: File) -> str:
         return await self._upload(photo.file, CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX)
 
@@ -60,12 +67,10 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         return await self._upload(avatar.file, CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX)
 
     async def delete_photo(self, photo_url: str):
-        try:
-            photo_public_id = f"{CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX}/{photo_url.split('/')[-1].split('.')[0]}"
-            cloudinary.uploader.destroy(photo_public_id, invalidate=True)
-        except Exception as e:
-            logger.error(e)
-            raise PhotoStorageProviderError(detail="Photo storage provider error")
+        await self._delete(CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX, photo_url)
+
+    async def delete_avatar(self, avatar_url: str):
+        await self._delete(CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX, avatar_url)
 
     async def transform_photo(
         self, photo_url: str, transform: TransformIn

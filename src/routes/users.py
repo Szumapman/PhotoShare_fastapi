@@ -18,6 +18,7 @@ from src.conf.constant import (
     EMAIL_EXISTS,
     USER_UPDATE,
     USER_DELETE,
+    DEFAULT_AVATAR_URL_START_V1_GRAVATAR,
 )
 from src.schemas.users import (
     UserDb,
@@ -101,6 +102,8 @@ async def update_user_avatar(
     if not file:
         print("No file")
     new_avatar_url = await photo_storage_provider.upload_avatar(file)
+    if not current_user.avatar.startswith(DEFAULT_AVATAR_URL_START_V1_GRAVATAR):
+        await photo_storage_provider.delete_avatar(current_user.avatar)
     user = await user_repo.update_user_avatar(current_user.id, new_avatar_url)
     await auth_service.update_user_in_redis(user.email, user)
     return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)

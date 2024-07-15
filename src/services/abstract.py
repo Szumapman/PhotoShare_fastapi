@@ -36,6 +36,10 @@ class AbstractPhotoStorageProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def delete_avatar(self, avatar_url: str):
+        pass
+
+    @abc.abstractmethod
     async def transform_photo(
         self, photo_url: str, transform: TransformIn
     ) -> (str, list[str]):
