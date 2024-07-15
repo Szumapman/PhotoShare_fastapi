@@ -138,7 +138,7 @@ async def set_active_status(
     )
 
 
-@router.patch("{user_id}/set_role/", response_model=UserInfo)
+@router.patch("/{user_id}/set_role", response_model=UserInfo)
 async def set_role(
     user_id: int,
     role: UserRoleIn,
@@ -146,7 +146,7 @@ async def set_role(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
     if current_user.role != ROLE_ADMIN:
-        raise ForbiddenError(FORBIDDEN_FOR_USER_AND_MODERATOR)
+        raise ForbiddenError(detail=FORBIDDEN_FOR_USER_AND_MODERATOR)
     user = await user_repo.set_user_role(user_id, role)
     await auth_service.update_user_in_redis(user.email, user)
     return UserInfo(
