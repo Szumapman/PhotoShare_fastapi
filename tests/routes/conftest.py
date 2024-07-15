@@ -225,6 +225,20 @@ def transform_in_json():
     }
 
 
+@pytest.fixture(scope="function")
+def active_status_in_json():
+    return {
+        "is_active": False,
+    }
+
+
+@pytest.fixture(scope="function")
+def user_role_in_json():
+    return {
+        "role": ROLE_MODERATOR,
+    }
+
+
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_photo(self, photo: File) -> str:
         return PHOTO_URL
@@ -233,6 +247,9 @@ class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
         return AVATAR_URL
 
     async def delete_photo(self, photo_url: str) -> None:
+        pass
+
+    async def delete_avatar(self, avatar_url: str) -> None:
         pass
 
     async def transform_photo(
