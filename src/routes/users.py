@@ -99,8 +99,6 @@ async def update_user_avatar(
         get_photo_storage_provider
     ),
 ):
-    if not file:
-        print("No file")
     new_avatar_url = await photo_storage_provider.upload_avatar(file)
     if not current_user.avatar.startswith(DEFAULT_AVATAR_URL_START_V1_GRAVATAR):
         await photo_storage_provider.delete_avatar(current_user.avatar)
@@ -124,7 +122,7 @@ async def delete_user(
         raise ForbiddenError(detail=FORBIDDEN_FOR_USER_AND_MODERATOR)
 
 
-@router.patch("/active_status/{user_id}", response_model=UserInfo)
+@router.patch("/{user_id}/active_status", response_model=UserInfo)
 async def set_active_status(
     user_id: int,
     active_status: ActiveStatus,
@@ -132,15 +130,15 @@ async def set_active_status(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
     if current_user.role not in [ROLE_ADMIN, ROLE_MODERATOR]:
-        raise ForbiddenError(FORBIDDEN_FOR_USER)
+        raise ForbiddenError(detail=FORBIDDEN_FOR_USER)
     user = await user_repo.set_user_active_status(user_id, active_status, current_user)
     return UserInfo(
-        user=UserDb.from_orm(user),
+        user=UserDb.model_validate(user),
         detail=f"User status set to {'active' if active_status.is_active else 'banned'}.",
     )
 
 
-@router.patch("/set_role/{user_id}", response_model=UserInfo)
+@router.patch("{user_id}/set_role/", response_model=UserInfo)
 async def set_role(
     user_id: int,
     role: UserRoleIn,
