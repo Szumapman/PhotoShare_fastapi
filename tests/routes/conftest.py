@@ -1,9 +1,6 @@
-from datetime import datetime
-
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import File
-from fastapi.responses import StreamingResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -14,14 +11,13 @@ from src.database.dependencies import (
     get_avatar_provider,
     get_photo_repository,
     get_photo_storage_provider,
-    get_qr_code_provider,
 )
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
-from src.schemas.photos import PhotoOut, TransformIn
-from src.services.abstract import AbstractPhotoStorageProvider, AbstractQrCodeProvider
+from src.schemas.photos import TransformIn
+from src.services.abstract import AbstractPhotoStorageProvider
 from src.services.avatar import AvatarProviderGravatar
-from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, ROLE_STANDARD, API, AUTH
+from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, API, AUTH
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -213,6 +209,20 @@ def photo_2():
         photo_url=PHOTO_URL,
         user_id=2,
     )
+
+
+@pytest.fixture(scope="function")
+def transform_in_json():
+    return {
+        "background": "blue",
+        "aspect_ratio": "2:1",
+        "gravity": "west",
+        "angle": 30,
+        "width": 0,
+        "height": 200,
+        "crop": "crop",
+        "effects": ["cartoonify"],
+    }
 
 
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):

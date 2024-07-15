@@ -64,6 +64,7 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             id=1,
             user_id=self.user.id,
             photo_url=self.photo_url,
+            transformations={},
             uploaded_at=datetime(year=2024, month=1, day=1),
             description=self.photo_info.description,
             tags=[Tag(id=1, name="tag_1"), Tag(id=2, name="tag_2")],
@@ -317,3 +318,30 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         assert photos_out[1].id == self.photo_2.id
 
         # add test for sort by rating when ready
+
+    async def test_add_transform_photo_success(self):
+        transform_params = ["param1", "param2"]
+        transformation_url = "http://example.com/transformation"
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo)
+        photo_with_transform = await self.repo.add_transform_photo(
+            self.photo.id,
+            transform_params,
+            transformation_url,
+        )
+        self.repo.get_photo_by_id.assert_called_once_with(self.photo.id)
+        self.assertEqual(len(photo_with_transform.transformations), 1)
+        self.assertEqual(photo_with_transform.transformations[1][0], transformation_url)
+        self.assertEqual(photo_with_transform.transformations[1][1], transform_params)
+
+        transform_params_2 = ["param1", "param2", "param3"]
+        transformation_url_2 = "http://example.com/transformation_2"
+        photo_with_transform = await self.repo.add_transform_photo(
+            self.photo.id,
+            transform_params_2,
+            transformation_url_2,
+        )
+        self.assertEqual(len(photo_with_transform.transformations), 2)
+        self.assertEqual(
+            photo_with_transform.transformations[2][0], transformation_url_2
+        )
+        self.assertEqual(photo_with_transform.transformations[2][1], transform_params_2)

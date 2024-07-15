@@ -33,6 +33,8 @@ from tests.routes.conftest import (
     PHOTO_URL,
     EMAIL_ADMIN,
     EMAIL_MODERATOR,
+    TRANSFORM_PHOTO_URL,
+    TRANSFORM_PARAMS,
 )
 from src.conf.constant import PHOTOS
 from src.schemas.photos import PhotoIn
@@ -457,3 +459,121 @@ def test_get_qr_code_with_invalid_transform_id_fail(
         )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "No data found for transformation id: 2"
+
+
+def test_get_qr_code_with_invalid_photo_id_fail(
+    session,
+    client_app,
+    photo,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.get(
+            f"{API}{PHOTOS}/999/qr_code",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == PHOTO_NOT_FOUND
+
+
+def test_transform_photo_success(
+    session,
+    client_app,
+    photo,
+    transform_in_json,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{PHOTOS}/{photo.id}/transform",
+            json=transform_in_json,
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_200_OK, response.text
+    data = response.json()
+    assert data["id"] == photo.id
+    assert data["transformations"] == {"1": [TRANSFORM_PHOTO_URL, TRANSFORM_PARAMS]}
+
+
+def test_transform_photo_with_invalid_photo_id_fail(
+    session,
+    client_app,
+    photo,
+    transform_in_json,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{PHOTOS}/999/transform",
+            json=transform_in_json,
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == PHOTO_NOT_FOUND
+
+
+def test_transform_photo_not_owner_fail(
+    session,
+    client_app,
+    photo,
+    transform_in_json,
+    access_token_user_admin,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{PHOTOS}/{photo.id}/transform",
+            json=transform_in_json,
+            headers={"Authorization": f"Bearer {access_token_user_admin}"},
+        )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == FORBIDDEN_FOR_NOT_OWNER
+
+
+def test_transform_photo_invalid_transform_fail(
+    session,
+    client_app,
+    photo,
+    transform_in_json,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.commit()
+    session.add(photo)
+    session.commit()
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.post(
+            f"{API}{PHOTOS}/{photo.id}/transform",
+            json={
+                "background": "blue",
+                "aspect_ratio": "2:1",
+                "gravity": "west",
+                "angle": 30,
+                "width": 0,
+                "height": 200,
+                "crop": "crop",
+                "effects": ["error_effect"],
+            },
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
