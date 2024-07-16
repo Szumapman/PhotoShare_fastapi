@@ -16,9 +16,6 @@ from src.services.abstract import AbstractPasswordHandler
 from src.services.avatar import AbstractAvatarProvider
 from src.conf.constant import (
     AUTH,
-    HTTP_401_UNAUTHORIZED_DETAILS,
-    HTTP_404_NOT_FOUND_DETAILS,
-    HTTP_403_FORBIDDEN_DETAILS,
     USER_LOGOUT,
     USER_CREATED,
     BANNED_USER,
@@ -27,13 +24,22 @@ from src.conf.constant import (
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
-from src.conf.errors import UnauthorizedError, NotFoundError, ForbiddenError
+from src.conf.errors import NotFoundError
 
 router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
 
 
 async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
+    """
+    This helping function is used to create access and refresh tokens for a user.
+    :param user: user to create tokens for
+    :type user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: tokens
+    :rtype: TokenModel
+    """
     access_token, session_id = await auth_service.create_access_token(
         data={"sub": user.email}
     )
@@ -53,6 +59,20 @@ async def signup(
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
     avatar_provider: AbstractAvatarProvider = Depends(get_avatar_provider),
 ):
+    """
+    This endpoint is used to create a new user account.
+
+    :param user: new user data
+    :type user: UserIn
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :param password_handler: password handler to work with
+    :type password_handler: AbstractPasswordHandler
+    :param avatar_provider: avatar provider to work with
+    :type avatar_provider: AbstractAvatarProvider
+    :return: info about the created user
+    :rtype: UserInfo
+    """
     if await user_repo.get_user_by_email(user.email):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -75,6 +95,21 @@ async def login(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
+    """
+    This endpoint is used to login a user.
+
+    :param body: password and username from request body
+    :type body: OAuth2PasswordRequestForm
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :param password_handler: password handler to work with
+    :type password_handler: AbstractPasswordHandler
+    :return: tokens for user
+    :rtype: TokenModel
+    :raises:
+        HTTPException(status_code=401, detail="Incorrect username or password") if username or password is incorrect
+        HTTPException(status_code=403, detail="User is banned") if user is banned
+    """
     user = await user_repo.get_user_by_email(body.username)
     if not user:
         raise HTTPException(
@@ -101,6 +136,18 @@ async def logout(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to logout current user from current session.
+
+    :param current_user: user to logout
+    :type current_user: User
+    :param credentials: credentials for current user
+    :type credentials: HTTPAuthorizationCredentials
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: info about the logout user
+    :rtype: UserInfo
+    """
     token = credentials.credentials
     session_id = await auth_service.get_session_id_from_token(token, current_user.email)
     user = await user_repo.logout_user(token, session_id, current_user)
@@ -113,6 +160,16 @@ async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to refresh tokens using the refresh token.
+
+    :param credentials: current user credentials
+    :type credentials: HTTPAuthorizationCredentials
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: tokens for user
+    :rtype: TokenModel
+    """
     old_refresh_token = credentials.credentials
     email = await auth_service.decode_refresh_token(old_refresh_token)
     user = await user_repo.get_user_by_email(email)

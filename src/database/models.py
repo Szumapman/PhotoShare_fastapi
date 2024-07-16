@@ -26,6 +26,9 @@ from src.conf.constant import (
 
 Base = declarative_base()
 
+"""
+This table is used to map tags to photos.
+"""
 photo_m2m_tag = Table(
     "photo_m2m_tag",
     Base.metadata,
@@ -37,6 +40,23 @@ photo_m2m_tag = Table(
 
 
 class Photo(Base):
+    """
+    SQLAlchemy model represents a photo in the database.
+
+    Attributes:
+        id (int): Primary key.
+        user_id (int): Foreign key to the user who uploaded the photo.
+        photo_url (str): URL of the photo.
+        transformations (list): List of transformations applied to the photo.
+        description (str): Description of the photo.
+        uploaded_at (datetime): Datetime when the photo was uploaded.
+
+        user: relationship to the user who uploaded the photo.
+        tags: relationship to the tags associated with the photo.
+        comments: relationship to the comments associated with the photo.
+        ratings: relationship to the ratings associated with the photo.
+    """
+
     __tablename__ = "photos"
 
     id = Column(Integer, primary_key=True)
@@ -62,6 +82,24 @@ class Photo(Base):
 
 
 class User(Base):
+    """
+    SQLAlchemy model represents a user in the database.
+
+    Attributes:
+        id (int): Primary key.
+        username (str): Username of the user.
+        email (str): Email of the user.
+        password (str): user password.
+        role (str): Role of the user.
+        created_at (datetime): Datetime when the user was created.
+        avatar (str): URL of the user's avatar.
+        is_active (bool): Whether the user is active or banned.
+
+        refresh_tokens: relationship to the refresh tokens associated with the user.
+        comments: relationship to the comments posted by the user.
+        ratings: relationship to the ratings given by the user.
+    """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -85,6 +123,14 @@ class User(Base):
 
 
 class Tag(Base):
+    """
+    SQLAlchemy model represents a tag in the database.
+
+    Attributes:
+        id (int): Primary key.
+        name (str): Name of the tag.
+    """
+
     __tablename__ = "tags"
 
     id = Column(Integer, primary_key=True)
@@ -92,6 +138,18 @@ class Tag(Base):
 
 
 class Comment(Base):
+    """
+    SQLAlchemy model represents a comment in the database.
+
+    Attributes:
+        id (int): Primary key.
+        photo_id (int): Foreign key to the photo the comment belongs to.
+        user_id (int): Foreign key to the user who posted the comment.
+        content (str): Content of the comment.
+        created_at (datetime): Datetime when the comment was created.
+        updated_at (datetime): Datetime when the comment was updated.
+    """
+
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True)
@@ -107,6 +165,16 @@ class Comment(Base):
 
 
 class Rating(Base):
+    """
+    SQLAlchemy model represents a rating in the database.
+
+    Attributes:
+        id (int): Primary key.
+        photo_id (int): Foreign key to the photo the rating belongs to.
+        user_id (int): Foreign key to the user who posted the rating.
+        score (int): Score of the rating.
+    """
+
     __tablename__ = "ratings"
 
     id = Column(Integer, primary_key=True)
@@ -120,6 +188,17 @@ class Rating(Base):
 
 
 class RefreshToken(Base):
+    """
+    SQLAlchemy model represents a refresh token in the database.
+
+    Attributes:
+        id (int): Primary key.
+        refresh_token (str): Refresh token.
+        user_id (int): Foreign key to the user the refresh token belongs to.
+        session_id (str): Session ID of the refresh token.
+        expires_at (datetime): Datetime when the refresh token expires.
+    """
+
     __tablename__ = "refresh_tokens"
     id = Column(Integer, primary_key=True)
     refresh_token = Column(String(350), nullable=False, unique=True, index=True)
@@ -131,6 +210,15 @@ class RefreshToken(Base):
 
 
 class LogoutAccessToken(Base):
+    """
+    SQLAlchemy model represents a logout access token in the database.
+
+    Attributes:
+        id (int): Primary key.
+        logout_access_token (str): Logout access token.
+        expires_at (datetime): Datetime when the logout access token expires.
+    """
+
     __tablename__ = "logout_access_tokens"
     id = Column(Integer, primary_key=True)
     logout_access_token = Column(String(350), nullable=False, unique=True, index=True)

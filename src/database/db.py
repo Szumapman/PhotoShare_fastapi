@@ -13,6 +13,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def get_db():
     """
     Create a new database session.
+
+    Yields:
+        Session: Database session.
     """
     db = SessionLocal()
 

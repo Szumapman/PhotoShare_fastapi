@@ -46,6 +46,27 @@ async def get_photos(
     skip: int = 0,
     limit: int = 10,
 ):
+    """
+    This endpoint is used to get all or queried photos (paginated). Photos can be sorted by date or rating.
+
+    :param query: query to search in description or tags (optional)
+    :type query: str | None
+    :param user_id: user id to filter by (optional)
+    :type user_id: int | None
+    :param sort_by: how to sort photos (optional)
+    :type sort_by: str | None
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :param skip: number of photos to skip
+    :type skip: int
+    :param limit: number of photos to get
+    :type limit: int
+    :return: list of photos
+    :rtype: list[PhotoOut]
+    :raise: HTTPException 502 bad gateway if sort_by is not valid
+    """
     if sort_by and sort_by not in PHOTO_SEARCH_ENUMS:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=INVALID_SORT_TYPE
@@ -64,6 +85,22 @@ async def create_photo(
     ),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
+    """
+    This endpoint is used to upload new photo.
+
+    :param photo_info: data of new photo to upload - description and tags (optional)
+    :type photo_info: PhotoIn
+    :param photo: photo file to upload
+    :type photo: UploadFile
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_storage_provider: storage provider to upload photo to it
+    :type photo_storage_provider: AbstractPhotoStorageProvider
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: photo with confirmation of upload
+    :rtype: PhotoCreated
+    """
     photo_url = await photo_storage_provider.upload_photo(photo)
     uploaded_photo = await photo_repo.upload_photo(
         current_user.id,
@@ -79,6 +116,18 @@ async def get_photo(
     current_user: UserDb = Depends(auth_service.get_current_user),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
+    """
+    This endpoint is used to get photo by id.
+
+    :param photo_id: id of photo to get
+    :type photo_id: int
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: photo
+    :rtype: PhotoOut
+    """
     photo = await photo_repo.get_photo_by_id(photo_id)
     return photo
 
@@ -94,6 +143,23 @@ async def get_qr_code(
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
     qr_code_provider: AbstractQrCodeProvider = Depends(get_qr_code_provider),
 ):
+    """
+    This endpoint is used to get photo or one of it transformation qr code.
+
+    :param photo_id: id of photo to get
+    :type photo_id: int
+    :param transform_id: transformation id to get qr code of (optional)
+    :type transform_id: int | None
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :param qr_code_provider: qr code provider to get qr code from it
+    :type qr_code_provider: AbstractQrCodeProvider
+    :return: qr code
+    :rtype: StreamingResponse
+    :raise: NotFoundError if no transformation found for given transformation id
+    """
     photo = await photo_repo.get_photo_by_id(photo_id)
     if transform_id:
         try:
@@ -116,6 +182,20 @@ async def delete_photo(
         get_photo_storage_provider
     ),
 ):
+    """
+    This endpoint is used to delete photo by id.
+
+    :param photo_id: id of photo to delete
+    :type photo_id: int
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :param photo_storage_provider: photo storage provider to delete photo from it
+    :type photo_storage_provider: AbstractPhotoStorageProvider
+    :return: deleted photo
+    :rtype: PhotoOut
+    """
     photo = await photo_repo.delete_photo(photo_id, current_user.id, current_user.role)
     await photo_storage_provider.delete_photo(photo.photo_url)
     return photo
@@ -128,6 +208,20 @@ async def update_photo(
     current_user: UserDb = Depends(auth_service.get_current_user),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
+    """
+    This endpoint is used to update photo by id.
+
+    :param photo_id: id of photo to update
+    :type photo_id: int
+    :param photo_info: new data of photo to update
+    :type photo_info: PhotoIn
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: updated photo
+    :rtype: PhotoOut
+    """
     photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
     return photo
 
@@ -142,6 +236,23 @@ async def transform_photo(
     ),
     photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
 ):
+    """
+    This endpoint is used to transform photo by id.
+
+    :param photo_id: id of photo to transform
+    :type photo_id: int
+    :param transform: transformation parameters to apply to photo
+    :type transform: TransformIn
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_storage_provider: photo storage provider to transform photo
+    :type photo_storage_provider: AbstractPhotoStorageProvider
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: updated photo
+    :rtype: PhotoOut
+    :raise: ForbiddenError if user who performs request is not owner of photo
+    """
     photo = await photo_repo.get_photo_by_id(photo_id)
     if photo.user_id != current_user.id:
         raise ForbiddenError(detail=FORBIDDEN_FOR_NOT_OWNER)

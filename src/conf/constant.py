@@ -1,3 +1,7 @@
+"""
+Set of constants used in the project.
+"""
+
 MAX_DESCRIPTION_LENGTH = 1000
 MAX_TAG_NAME_LENGTH = 50
 MAX_COMMENT_LENGTH = 1000

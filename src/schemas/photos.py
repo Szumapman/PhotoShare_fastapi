@@ -12,18 +12,39 @@ from src.schemas.comments import CommentOut
 
 
 class PhotoIn(BaseModel):
+    """
+    Photo model for creating / updating photo data.
+
+    :param description: description of photo
+    :type description: str
+    :param tags: tags of photo
+    :type tags: list[TagIn] | None
+    """
+
     description: str = Field()
     tags: list[TagIn] | None = None
 
     @model_validator(mode="before")
     @classmethod
     def validate_to_json(cls, value):
+        """
+        Convert model to json if it is a string.
+
+        :param value: json or model
+        :return: json model
+        """
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
 
     @field_validator("description")
     def validate_description(cls, description: str) -> str:
+        """
+        Validate description.
+        :param description: description of photo
+        :return: description of photo
+        :raise: ValueError if description is too long or empty
+        """
         if len(description.strip()) > MAX_DESCRIPTION_LENGTH:
             raise ValueError(
                 f"Description too long. Max description length is {MAX_DESCRIPTION_LENGTH}."
@@ -34,6 +55,12 @@ class PhotoIn(BaseModel):
 
     @field_validator("tags")
     def validate_tags(cls, tags: list[TagIn]) -> list[TagIn] | None:
+        """
+        Validate tags.
+        :param tags: tags of photo
+        :return: tags of photo
+        :raise: ValueError if too many tags are given
+        """
         if tags and len(tags) > MAX_TAGS_AMOUNT:
             raise ValueError(
                 f"Too many tags. You can't add more than {MAX_TAGS_AMOUNT} tags."
@@ -42,12 +69,42 @@ class PhotoIn(BaseModel):
 
 
 class PhotoCreated(PhotoIn):
+    """
+    Photo model for returning photo after uploading it to the database.
+
+    :param id: id of photo
+    :type id: int
+    :param photo_url: url of photo
+    :type photo_url: str
+    :param uploaded_at: date and time when photo was uploaded
+    :type uploaded_at: datetime
+    """
+
     id: int
     photo_url: str
     uploaded_at: datetime
 
 
 class PhotoOut(PhotoIn):
+    """
+    Photo model for returning photo from database.
+
+    :param id: id of photo
+    :type id: int
+    :param user_id: id of user who uploaded photo
+    :type user_id: int
+    :param photo_url: url of photo
+    :type photo_url: str
+    :param uploaded_at: date and time when photo was uploaded
+    :type uploaded_at: datetime
+    :param tags: tags of photo
+    :type tags: list[TagOut] | None
+    :param comments: comments of photo
+    :type comments: list[CommentOut] | None
+    :param rating: rating of photo
+    :type rating: float | None
+    """
+
     id: int
     user_id: int
     photo_url: str
@@ -93,12 +150,25 @@ class TransformIn(BaseModel):
 
     @field_validator("width", "height")
     def validate_width_height(cls, value) -> int:
+        """
+        Validate width and height of transformation parameters.
+
+        :param value: width or height of transformation parameters
+        :return: width or height of transformation parameters
+        :raise: ValueError if value is negative
+        """
         if value < 0:
             raise ValueError("The value cannot be negative.")
         return value
 
     @field_validator("effects")
     def validate_effects(cls, effects) -> list[str]:
+        """
+        Validate effects of transformation parameters.
+
+        :param effects: effects given by user
+        :return: effects
+        """
         if effects and len(effects) > 0:
             for effect in effects:
                 effect, *_ = effect.split(":")

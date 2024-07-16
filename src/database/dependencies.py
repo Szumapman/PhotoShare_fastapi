@@ -15,24 +15,54 @@ from src.services.qr_code import QrCodeProvider
 
 
 def get_password_handler() -> AbstractPasswordHandler:
+    """
+    Function to get password handler.
+
+    :return: password handler inherited from AbstractPasswordHandler
+    """
     return BcryptPasswordHandler()
 
 
 def get_avatar_provider() -> AbstractAvatarProvider:
+    """
+    Function to get avatar provider.
+
+    :return: avatar provider inherited from AbstractAvatarProvider
+    """
     return AvatarProviderGravatar()
 
 
 def get_qr_code_provider() -> AbstractQrCodeProvider:
+    """
+    Function to get qr code provider.
+
+    :return: qr code provider inherited from AbstractQrCodeProvider
+    """
     return QrCodeProvider()
 
 
 def get_photo_storage_provider() -> AbstractPhotoStorageProvider:
+    """
+    Function to get photo storage provider.
+
+    :return: photo storage provider inherited from AbstractPhotoStorageProvider
+    """
     return CloudinaryPhotoStorageProvider()
 
 
 def get_user_repository() -> AbstractUserRepo:
+    """
+    Function to get user repository.
+
+    :return: user repository inherited from AbstractUserRepo
+    """
     return PostgresUserRepo(next(get_db()))
 
 
 def get_photo_repository() -> AbstractPhotoRepo:
+    """
+    Function to get photo repository.
+
+    :return: photo repository inherited from AbstractPhotoRepo
+    """
     return PostgresPhotoRepo(next(get_db()))

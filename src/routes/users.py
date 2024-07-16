@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 
 from src.services.auth import auth_service
@@ -33,7 +31,7 @@ from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
 from src.services.abstract import AbstractPasswordHandler, AbstractPhotoStorageProvider
 
-from src.conf.errors import NotFoundError, ForbiddenError, UnauthorizedError
+from src.conf.errors import ForbiddenError
 
 router = APIRouter(prefix=USERS, tags=["users"])
 
@@ -45,6 +43,18 @@ async def get_users(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to get all users. Depending on the user role, the endpoint will return different data views.
+
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: users
+    :rtype: list[UserDb] if current_user role is admin |
+            list[UserModeratorView] if current_user role is moderator |
+            list[UserPublic] if current_user role is standard
+    """
     users = await user_repo.get_users()
     if current_user.role == ROLE_ADMIN:
         return [UserDb.model_validate(user) for user in users]
@@ -59,6 +69,20 @@ async def get_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to get user by id. Depending on the user role, the endpoint will return different data views.
+
+    :param user_id: id of user to get
+    :type user_id: int
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: user
+    :rtype: UserDb if current_user role is admin |
+            UserModeratorView if current_user role is moderator |
+            UserPublic if current_user role is standard
+    """
     user = await user_repo.get_user_by_id(user_id)
     if current_user.role == ROLE_ADMIN or current_user.id == user_id:
         return UserDb.model_validate(user)
@@ -74,6 +98,20 @@ async def update_user(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
     password_handler: AbstractPasswordHandler = Depends(get_password_handler),
 ):
+    """
+    This endpoint is used to update user.
+
+    :param new_user_data: new user data
+    :type new_user_data: UserIn
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :param password_handler: password handler to work with
+    :type password_handler: AbstractPasswordHandler
+    :return: updated user with confirmation message
+    :rtype: UserInfo
+    """
     if new_user_data.username != current_user.username:
         if await user_repo.get_user_by_username(new_user_data.username):
             raise HTTPException(
@@ -99,6 +137,20 @@ async def update_user_avatar(
         get_photo_storage_provider
     ),
 ):
+    """
+    This endpoint is used to update user avatar.
+
+    :param file: new avatar file
+    :type file: UploadFile
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :param photo_storage_provider: photo storage provider to work with
+    :type photo_storage_provider: AbstractPhotoStorageProvider
+    :return: updated user with confirmation message
+    :rtype: UserInfo
+    """
     new_avatar_url = await photo_storage_provider.upload_avatar(file)
     if not current_user.avatar.startswith(DEFAULT_AVATAR_URL_START_V1_GRAVATAR):
         await photo_storage_provider.delete_avatar(current_user.avatar)
@@ -113,6 +165,19 @@ async def delete_user(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to delete user.
+
+    :param user_id: id of user to delete
+    :type user_id: int
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: deleted user with confirmation message
+    :rtype: UserInfo
+    :raise: ForbiddenError if current_user role is not admin or user_id is not equal to current_user id
+    """
     if current_user.role == ROLE_ADMIN or current_user.id == user_id:
         user = await user_repo.get_user_by_id(user_id)
         user = await user_repo.delete_user(user.id)
@@ -129,6 +194,21 @@ async def set_active_status(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to set user active status.
+
+    :param user_id: id of user to set active status
+    :type user_id: int
+    :param active_status: new active status
+    :type active_status: ActiveStatus
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: updated user with confirmation message
+    :rtype: UserInfo
+    :raise: ForbiddenError if current_user role is not admin or moderator
+    """
     if current_user.role not in [ROLE_ADMIN, ROLE_MODERATOR]:
         raise ForbiddenError(detail=FORBIDDEN_FOR_USER)
     user = await user_repo.set_user_active_status(user_id, active_status, current_user)
@@ -145,6 +225,21 @@ async def set_role(
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
+    """
+    This endpoint is used to set user role.
+
+    :param user_id: id of user to set role
+    :type user_id: int
+    :param role: new role
+    :type role: UserRoleIn
+    :param current_user: user who performed request
+    :type current_user: User
+    :param user_repo: repository to work with
+    :type user_repo: AbstractUserRepo
+    :return: updated user with confirmation message
+    :rtype: UserInfo
+    :raise: ForbiddenError if current_user role is not admin
+    """
     if current_user.role != ROLE_ADMIN:
         raise ForbiddenError(detail=FORBIDDEN_FOR_USER_AND_MODERATOR)
     user = await user_repo.set_user_role(user_id, role)
