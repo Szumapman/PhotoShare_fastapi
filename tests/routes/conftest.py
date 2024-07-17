@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from main import app
-from src.database.models import Base, User, Photo
+from src.database.models import Base, User, Photo, Rating
 from src.database.dependencies import (
     get_user_repository,
     get_avatar_provider,
@@ -244,6 +244,16 @@ def rating_in_json():
     return {
         "score": 5,
     }
+
+
+@pytest.fixture(scope="function")
+def rating():
+    return Rating(
+        id=1,
+        photo_id=2,
+        user_id=1,
+        score=5,
+    )
 
 
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):

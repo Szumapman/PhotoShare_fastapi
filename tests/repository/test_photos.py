@@ -16,6 +16,7 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER,
     USER_NOT_FOUND,
     FORBIDDEN_FOR_OWNER,
+    RATING_NOT_FOUND,
 )
 
 
@@ -378,3 +379,16 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ForbiddenError) as e:
             await self.repo.rate_photo(self.photo.id, self.rating_in, self.user.id)
             self.assertEqual(e.exception.detail, FORBIDDEN_FOR_OWNER)
+
+    async def test_delete_rating_success(self):
+        self.db.query.return_value.filter.return_value.first.return_value = self.rating
+        rating = await self.repo.delete_rating(self.photo.id, self.user_2.id)
+        assert rating.photo_id == self.photo.id
+        assert rating.user_id == self.user_2.id
+        assert rating.score == self.rating.score
+
+    async def test_delete_rating_fail(self):
+        self.db.query.return_value.filter.return_value.first.return_value = None
+        with self.assertRaises(NotFoundError) as e:
+            await self.repo.delete_rating(999, self.user_2.id)
+            self.assertEqual(e.exception.detail, RATING_NOT_FOUND)

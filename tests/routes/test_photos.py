@@ -8,7 +8,7 @@ from fastapi import status
 
 from src.schemas.tags import TagIn
 from src.services.auth import auth_service
-from src.database.models import User, Photo
+from src.database.models import User, Photo, Rating
 
 from src.conf.constant import (
     API,
@@ -20,6 +20,8 @@ from src.conf.constant import (
     INVALID_SORT_TYPE,
     FORBIDDEN_FOR_NOT_OWNER,
     FORBIDDEN_FOR_OWNER,
+    RATING_DELETED,
+    RATING_NOT_FOUND,
 )
 from tests.routes.conftest import (
     EMAIL_STANDARD,
@@ -682,3 +684,47 @@ def test_rate_photo_by_owner_fail(
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.json()["detail"] == FORBIDDEN_FOR_OWNER
+
+
+def test_delete_rating_success(
+    session,
+    client_app,
+    photo_2,
+    rating,
+    rating_in_json,
+    access_token_user_standard,
+):
+    session.query(Photo).delete()
+    session.query(Rating).delete()
+    session.commit()
+    session.add(photo_2)
+    session.add(rating)
+    session.commit()
+    photo_2_id = photo_2.id
+    user_id = 1
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.delete(
+            f"{API}{PHOTOS}/{photo_2_id}/rate",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert data["rating"]["photo_id"] == photo_2_id
+        assert data["rating"]["user_id"] == user_id
+        assert data["rating"]["score"] == rating_in_json["score"]
+        assert data["detail"] == RATING_DELETED
+
+
+def test_delete_rating_with_invalid_photo_id_fail(
+    client_app,
+    access_token_user_standard,
+):
+    with patch.object(auth_service, "r") as mock_redis:
+        mock_redis.get.return_value = None
+        response = client_app.delete(
+            f"{API}{PHOTOS}/999/rate",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == RATING_NOT_FOUND
