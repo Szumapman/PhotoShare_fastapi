@@ -1,9 +1,6 @@
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
-from datetime import datetime
+from unittest.mock import patch
 from time import sleep
 
-import pytest
-from fastapi.security import HTTPAuthorizationCredentials
 from fastapi import status
 
 from src.schemas.tags import TagIn
@@ -22,6 +19,10 @@ from src.conf.constant import (
     FORBIDDEN_FOR_OWNER,
     RATING_DELETED,
     RATING_NOT_FOUND,
+    PHOTO_CREATED,
+    PHOTO_DELETED,
+    PHOTO_UPDATED,
+    PHOTO_RATED,
 )
 from tests.routes.conftest import (
     EMAIL_STANDARD,
@@ -32,7 +33,7 @@ from tests.routes.conftest import (
     TRANSFORM_PARAMS,
 )
 from src.conf.constant import PHOTOS
-from src.schemas.photos import PhotoIn, RatingIn
+from src.schemas.photos import PhotoIn
 
 
 def test_create_photo_success(client_app, photo_in_json, access_token_user_standard):
@@ -48,8 +49,11 @@ def test_create_photo_success(client_app, photo_in_json, access_token_user_stand
             )
         assert response.status_code == status.HTTP_201_CREATED, response.text
         data = response.json()
-        assert data["photo_url"] == PHOTO_URL
-        assert "id" in data
+        assert data["photo"]["photo_url"] == PHOTO_URL
+        assert "id" in data["photo"]
+        assert data["photo"]["description"] == photo_in_data.description
+        assert data["photo"]["tags"][0]["name"] == photo_in_data.tags[0].name
+        assert data["detail"] == PHOTO_CREATED
 
 
 def test_get_photo_success(session, client_app, photo, access_token_user_standard):
@@ -95,7 +99,8 @@ def test_delete_photo_success(session, client_app, photo, access_token_user_stan
         )
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
-        assert data["id"] == photo.id
+        assert data["photo"]["id"] == photo.id
+        assert data["detail"] == PHOTO_DELETED
 
 
 def test_delete_photo_by_admin_success(
@@ -116,7 +121,8 @@ def test_delete_photo_by_admin_success(
         )
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
-        assert data["id"] == photo.id
+        assert data["photo"]["id"] == photo.id
+        assert data["detail"] == PHOTO_DELETED
 
 
 def test_delete_fail_wrong_user_id(
@@ -181,10 +187,11 @@ def test_update_photo_success(
         )
     assert response.status_code == status.HTTP_200_OK, response.text
     data = response.json()
-    assert data["id"] == photo.id
-    assert data["description"] == "new test description"
-    assert data["tags"][0]["name"] == "new tag1 test"
-    assert data["tags"][1]["name"] == "new tag2 test"
+    assert data["photo"]["id"] == photo.id
+    assert data["photo"]["description"] == "new test description"
+    assert data["photo"]["tags"][0]["name"] == "new tag1 test"
+    assert data["photo"]["tags"][1]["name"] == "new tag2 test"
+    assert data["detail"] == PHOTO_UPDATED
 
 
 def test_update_photo_fail_wrong_photo_id(
@@ -496,8 +503,11 @@ def test_transform_photo_success(
         )
     assert response.status_code == status.HTTP_200_OK, response.text
     data = response.json()
-    assert data["id"] == photo.id
-    assert data["transformations"] == {"1": [TRANSFORM_PHOTO_URL, TRANSFORM_PARAMS]}
+    assert data["photo"]["id"] == photo.id
+    assert data["photo"]["transformations"] == {
+        "1": [TRANSFORM_PHOTO_URL, TRANSFORM_PARAMS]
+    }
+    assert data["detail"] == PHOTO_UPDATED
 
 
 def test_transform_photo_with_invalid_photo_id_fail(
@@ -597,9 +607,10 @@ def test_rate_photo_success(
         )
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
-        assert data["photo_id"] == photo_2_id
-        assert data["user_id"] == user_id
-        assert data["score"] == rating_in_json["score"]
+        assert data["rating"]["photo_id"] == photo_2_id
+        assert data["rating"]["user_id"] == user_id
+        assert data["rating"]["score"] == rating_in_json["score"]
+        assert data["detail"] == PHOTO_RATED
 
         rating_in_json["score"] = 1
         response = client_app.post(
@@ -609,9 +620,10 @@ def test_rate_photo_success(
         )
         assert response.status_code == status.HTTP_200_OK, response.text
         data = response.json()
-        assert data["photo_id"] == photo_2_id
-        assert data["user_id"] == user_id
-        assert data["score"] == rating_in_json["score"]
+        assert data["rating"]["photo_id"] == photo_2_id
+        assert data["rating"]["user_id"] == user_id
+        assert data["rating"]["score"] == rating_in_json["score"]
+        assert data["detail"] == PHOTO_RATED
 
 
 def test_rate_photo_with_invalid_photo_id_fail(

@@ -14,7 +14,7 @@ from src.schemas.users import UserDb
 from src.schemas.photos import (
     PhotoOut,
     PhotoIn,
-    PhotoCreated,
+    PhotoInfo,
     TransformIn,
     RatingIn,
     RatingOut,
@@ -34,6 +34,10 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER,
     INVALID_SORT_TYPE,
     RATING_DELETED,
+    PHOTO_CREATED,
+    PHOTO_DELETED,
+    PHOTO_UPDATED,
+    PHOTO_RATED,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
@@ -84,7 +88,7 @@ async def get_photos(
     return photos
 
 
-@router.post("/", response_model=PhotoCreated, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=PhotoInfo, status_code=status.HTTP_201_CREATED)
 async def create_photo(
     photo_info: PhotoIn,
     photo: UploadFile = File(),
@@ -116,7 +120,9 @@ async def create_photo(
         photo_info,
         photo_url,
     )
-    return uploaded_photo
+    return PhotoInfo(
+        photo=PhotoOut.model_validate(uploaded_photo), detail=PHOTO_CREATED
+    )
 
 
 @router.get("/{photo_id}", response_model=PhotoOut)
@@ -182,7 +188,7 @@ async def get_qr_code(
     return await qr_code_provider.stream_qr_code(photo_url)
 
 
-@router.delete("/{photo_id}", response_model=PhotoOut)
+@router.delete("/{photo_id}", response_model=PhotoInfo)
 async def delete_photo(
     photo_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -207,10 +213,10 @@ async def delete_photo(
     """
     photo = await photo_repo.delete_photo(photo_id, current_user.id, current_user.role)
     await photo_storage_provider.delete_photo(photo.photo_url)
-    return photo
+    return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_DELETED)
 
 
-@router.patch("/{photo_id}", response_model=PhotoOut)
+@router.patch("/{photo_id}", response_model=PhotoInfo)
 async def update_photo(
     photo_id: int,
     photo_info: PhotoIn,
@@ -232,10 +238,10 @@ async def update_photo(
     :rtype: PhotoOut
     """
     photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
-    return photo
+    return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_UPDATED)
 
 
-@router.post("/{photo_id}/transform", response_model=PhotoOut)
+@router.post("/{photo_id}/transform", response_model=PhotoInfo)
 async def transform_photo(
     photo_id: int,
     transform: TransformIn,
@@ -271,10 +277,10 @@ async def transform_photo(
     photo = await photo_repo.add_transform_photo(
         photo_id, transform_params, transform_url
     )
-    return photo
+    return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_UPDATED)
 
 
-@router.post("/{photo_id}/rate", response_model=RatingOut)
+@router.post("/{photo_id}/rate", response_model=RatingInfo)
 async def rate_photo(
     photo_id: int,
     rating_in: RatingIn,
@@ -296,7 +302,7 @@ async def rate_photo(
     :rtype: PhotoOut
     """
     rating = await photo_repo.rate_photo(photo_id, rating_in, current_user.id)
-    return RatingOut.model_validate(rating)
+    return RatingInfo(rating=RatingOut.model_validate(rating), detail=PHOTO_RATED)
 
 
 @router.delete("/{photo_id}/rate", response_model=RatingInfo)

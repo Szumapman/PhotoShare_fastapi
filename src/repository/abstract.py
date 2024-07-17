@@ -333,8 +333,8 @@ class AbstractPhotoRepo(abc.ABC):
         :type rating_in: RatingIn
         :param user_id: id of user who rated photo
         :type user_id: int
-        :return: updated photo
-        :rtype: Photo
+        :return: new rating
+        :rtype: Rating
         """
         pass
 

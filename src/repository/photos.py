@@ -241,8 +241,9 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         :type rating_in: RatingIn
         :param user_id: id of user who rated photo
         :type user_id: int
-        :return: updated photo
-        :rtype: Photo
+        :return: new rating
+        :rtype: Rating
+        :raises: ForbiddenError: if user is owner of photo
         """
         photo = await self.get_photo_by_id(photo_id)
         if user_id == photo.user_id:

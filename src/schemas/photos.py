@@ -68,23 +68,6 @@ class PhotoIn(BaseModel):
         return tags
 
 
-class PhotoCreated(PhotoIn):
-    """
-    Photo model for returning photo after uploading it to the database.
-
-    :param id: id of photo
-    :type id: int
-    :param photo_url: url of photo
-    :type photo_url: str
-    :param uploaded_at: date and time when photo was uploaded
-    :type uploaded_at: datetime
-    """
-
-    id: int
-    photo_url: str
-    uploaded_at: datetime
-
-
 class PhotoOut(PhotoIn):
     """
     Photo model for returning photo from database.
@@ -114,7 +97,20 @@ class PhotoOut(PhotoIn):
     comments: list[CommentOut] | None = None
     rating: float | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PhotoInfo(BaseModel):
+    """
+    Model for returning info about performed operation and photo.
+
+    Attributes:
+        photo (PhotoOut): Photo model for returning photo from database.
+        detail (str): Detail of performed operation.
+    """
+
+    photo: PhotoOut
+    detail: str
 
 
 class TransformIn(BaseModel):

@@ -87,5 +87,8 @@ PHOTO_SEARCH_ENUMS = [
     "rating-asc",
 ]
 INVALID_SORT_TYPE = "Invalid sort type"
-
+PHOTO_CREATED = "Photo successfully created"
+PHOTO_DELETED = "Photo deleted"
+PHOTO_UPDATED = "Photo updated"
+PHOTO_RATED = "Photo rated"
 RATING_DELETED = "Rating deleted"
