@@ -61,6 +61,7 @@ HTTP_403_FORBIDDEN_DETAILS = [
 TOKEN_NOT_FOUND = "Token not found"
 USER_NOT_FOUND = "User not found"
 PHOTO_NOT_FOUND = "Photo not found"
+RATING_NOT_FOUND = "Rating not found"
 
 HTTP_404_NOT_FOUND_DETAILS = [TOKEN_NOT_FOUND, USER_NOT_FOUND, PHOTO_NOT_FOUND]
 
@@ -86,3 +87,5 @@ PHOTO_SEARCH_ENUMS = [
     "rating-asc",
 ]
 INVALID_SORT_TYPE = "Invalid sort type"
+
+RATING_DELETED = "Rating deleted"

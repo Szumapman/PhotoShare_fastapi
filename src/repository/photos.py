@@ -9,6 +9,7 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER,
     ROLE_ADMIN,
     FORBIDDEN_FOR_OWNER,
+    RATING_NOT_FOUND,
 )
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.database.models import Photo, Tag, User, Rating
@@ -258,4 +259,26 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
             rating.score = rating_in.score
         self.db.commit()
         self.db.refresh(rating)
+        return rating
+
+    async def delete_rating(self, photo_id: int, user_id: int) -> Rating:
+        """
+        Deletes rating from photo in database
+
+        :param photo_id: id of photo to delete rating from
+        :type photo_id: int
+        :param user_id: id of user who rated photo
+        :type user_id: int
+        :return: deleted rating
+        :rtype: Rating
+        """
+        rating = (
+            self.db.query(Rating)
+            .filter(Rating.photo_id == photo_id, Rating.user_id == user_id)
+            .first()
+        )
+        if rating is None:
+            raise NotFoundError(detail=RATING_NOT_FOUND)
+        self.db.delete(rating)
+        self.db.commit()
         return rating

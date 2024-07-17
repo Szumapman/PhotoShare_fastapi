@@ -18,6 +18,7 @@ from src.schemas.photos import (
     TransformIn,
     RatingIn,
     RatingOut,
+    RatingInfo,
 )
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractPhotoRepo
@@ -32,6 +33,7 @@ from src.conf.constant import (
     PHOTO_SEARCH_ENUMS,
     FORBIDDEN_FOR_NOT_OWNER,
     INVALID_SORT_TYPE,
+    RATING_DELETED,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
@@ -295,3 +297,25 @@ async def rate_photo(
     """
     rating = await photo_repo.rate_photo(photo_id, rating_in, current_user.id)
     return RatingOut.model_validate(rating)
+
+
+@router.delete("/{photo_id}/rate", response_model=RatingInfo)
+async def delete_rating(
+    photo_id: int,
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+):
+    """
+    This endpoint is used to delete photo rating.
+
+    :param photo_id: id of photo to delete rating
+    :type photo_id: int
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: deleted rating
+    :rtype: RatingInfo
+    """
+    rating = await photo_repo.delete_rating(photo_id, current_user.id)
+    return RatingInfo(rating=RatingOut.model_validate(rating), detail=RATING_DELETED)

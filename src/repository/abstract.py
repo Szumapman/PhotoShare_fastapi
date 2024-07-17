@@ -337,3 +337,16 @@ class AbstractPhotoRepo(abc.ABC):
         :rtype: Photo
         """
         pass
+
+    @abc.abstractmethod
+    async def delete_rating(self, photo_id: int, user_id: int) -> Rating:
+        """
+        Deletes rating from photo in database
+
+        :param photo_id: id of photo to delete rating from
+        :type photo_id: int
+        :param user_id: id of user who deleted rating
+        :type user_id: int
+        :return: updated photo
+        :rtype: Rating
+        """

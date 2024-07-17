@@ -213,3 +213,16 @@ class RatingOut(RatingIn):
     user_id: int
 
     model_config = {"from_attributes": True}
+
+
+class RatingInfo(BaseModel):
+    """
+    Model for returning info about performed operation and rating.
+
+    Attributes:
+        rating (RatingOut): The rating object
+        detail (str): The detail of performed operation
+    """
+
+    rating: RatingOut
+    detail: str
