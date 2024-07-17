@@ -95,7 +95,7 @@ class PhotoOut(PhotoIn):
     uploaded_at: datetime
     tags: list[TagOut] | None = None
     comments: list[CommentOut] | None = None
-    rating: float | None = None
+    average_rating: float | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
