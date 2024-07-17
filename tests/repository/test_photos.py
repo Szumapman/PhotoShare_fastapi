@@ -5,8 +5,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from src.conf.errors import NotFoundError, ForbiddenError
-from src.database.models import Tag, User, Photo
-from src.schemas.photos import TagIn, PhotoIn
+from src.database.models import Tag, User, Photo, Rating
+from src.schemas.photos import TagIn, PhotoIn, RatingIn
 from src.repository.photos import PostgresPhotoRepo
 from src.conf.constant import (
     ROLE_STANDARD,
@@ -15,6 +15,7 @@ from src.conf.constant import (
     ROLE_ADMIN,
     FORBIDDEN_FOR_NOT_OWNER,
     USER_NOT_FOUND,
+    FORBIDDEN_FOR_OWNER,
 )
 
 
@@ -86,6 +87,11 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
 
         self.skip = 0
         self.limit = 10
+
+        self.rating_in = RatingIn(score=5)
+        self.rating = Rating(
+            photo_id=self.photo.id, user_id=self.user_2.id, score=self.rating_in.score
+        )
 
     async def test_upload_photo_with_existing_tags(self):
         self.db.add(self.tag1)
@@ -345,3 +351,30 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
             photo_with_transform.transformations[2][0], transformation_url_2
         )
         self.assertEqual(photo_with_transform.transformations[2][1], transform_params_2)
+
+    async def test_rate_photo_success(self):
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo)
+        self.db.query.return_value.filter.return_value.first.return_value = None
+        rating = await self.repo.rate_photo(
+            self.photo.id, self.rating_in, self.user_2.id
+        )
+        assert rating.photo_id == self.photo.id
+        assert rating.user_id == self.user_2.id
+        assert rating.score == self.rating.score
+
+        self.db.query.return_value.filter.return_value.first.return_value = self.rating
+        self.rating.score = 1
+        rating = await self.repo.rate_photo(
+            self.photo.id, self.rating_in, self.user_2.id
+        )
+        assert rating.photo_id == self.photo.id
+        assert rating.user_id == self.user_2.id
+        assert rating.score == self.rating.score
+
+    async def test_rate_photo_fail(self):
+        self.repo.get_photo_by_id = AsyncMock(return_value=self.photo)
+        self.rating.user_id = self.user.id
+        self.db.query.return_value.filter.return_value.first.return_value = self.rating
+        with self.assertRaises(ForbiddenError) as e:
+            await self.repo.rate_photo(self.photo.id, self.rating_in, self.user.id)
+            self.assertEqual(e.exception.detail, FORBIDDEN_FOR_OWNER)

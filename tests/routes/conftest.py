@@ -239,6 +239,13 @@ def user_role_in_json():
     }
 
 
+@pytest.fixture(scope="function")
+def rating_in_json():
+    return {
+        "score": 5,
+    }
+
+
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_photo(self, photo: File) -> str:
         return PHOTO_URL
