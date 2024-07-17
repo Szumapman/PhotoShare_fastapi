@@ -46,6 +46,7 @@ FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR = (
     "Only owner or admin can perform this operation."
 )
 FORBIDDEN_FOR_NOT_OWNER = "Only the owner of the picture can perform this operation."
+FORBIDDEN_FOR_OWNER = "Only not-owner can perform this operation."
 BANNED_USER = "User is banned."
 
 HTTP_403_FORBIDDEN_DETAILS = [

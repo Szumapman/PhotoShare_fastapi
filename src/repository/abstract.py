@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Type
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
-from src.database.models import User, Photo
-from src.schemas.photos import PhotoIn, PhotoOut
+from src.database.models import User, Photo, Rating
+from src.schemas.photos import PhotoIn, PhotoOut, RatingIn
 
 
 class AbstractUserRepo(abc.ABC):
@@ -315,6 +315,24 @@ class AbstractPhotoRepo(abc.ABC):
         :type transform_params: list[str]
         :param transform_url: url to transformed photo
         :type transform_url: str
+        :return: updated photo
+        :rtype: Photo
+        """
+        pass
+
+    @abc.abstractmethod
+    async def rate_photo(
+        self, photo_id: int, rating_in: RatingIn, user_id: int
+    ) -> Rating:
+        """
+        Rates photo in database
+
+        :param photo_id: id of photo to rate
+        :type photo_id: int
+        :param rating_in: new rating
+        :type rating_in: RatingIn
+        :param user_id: id of user who rated photo
+        :type user_id: int
         :return: updated photo
         :rtype: Photo
         """

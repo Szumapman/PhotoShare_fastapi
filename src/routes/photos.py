@@ -11,7 +11,14 @@ from fastapi.responses import StreamingResponse
 
 from src.conf.errors import ForbiddenError, NotFoundError
 from src.schemas.users import UserDb
-from src.schemas.photos import PhotoOut, PhotoIn, PhotoCreated, TransformIn
+from src.schemas.photos import (
+    PhotoOut,
+    PhotoIn,
+    PhotoCreated,
+    TransformIn,
+    RatingIn,
+    RatingOut,
+)
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractPhotoRepo
 from src.services.abstract import AbstractPhotoStorageProvider, AbstractQrCodeProvider
@@ -263,3 +270,28 @@ async def transform_photo(
         photo_id, transform_params, transform_url
     )
     return photo
+
+
+@router.post("/{photo_id}/rate", response_model=RatingOut)
+async def rate_photo(
+    photo_id: int,
+    rating_in: RatingIn,
+    current_user: UserDb = Depends(auth_service.get_current_user),
+    photo_repo: AbstractPhotoRepo = Depends(get_photo_repository),
+):
+    """
+    This endpoint is used to rate or change previous photo rating.
+
+    :param photo_id: id of photo to rate
+    :type photo_id: int
+    :param rating_in: rating to apply to photo
+    :type rating_in: RatingIn
+    :param current_user: user who performed request
+    :type current_user: UserDb
+    :param photo_repo: repository to work with
+    :type photo_repo: AbstractPhotoRepo
+    :return: updated photo
+    :rtype: PhotoOut
+    """
+    rating = await photo_repo.rate_photo(photo_id, rating_in, current_user.id)
+    return RatingOut.model_validate(rating)

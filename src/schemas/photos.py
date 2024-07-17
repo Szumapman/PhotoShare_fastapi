@@ -187,3 +187,29 @@ class TransformIn(BaseModel):
                         "saturation, blur, sepia, grayscale, vignette"
                     )
         return effects
+
+
+class RatingIn(BaseModel):
+    """
+    Data model for rating given by user.
+
+    Attributes:
+        score (int): The rating score from 1 to 5
+    """
+
+    score: int = Field(..., ge=1, le=5, description="The rating score from 1 to 5")
+
+
+class RatingOut(RatingIn):
+    """
+    Data model for rating returned from database. Inherits from RatingIn
+
+    Attributes:
+        photo_id (int): The id of the rated photo
+        user_id (int): The id of the user who rated the photo
+    """
+
+    photo_id: int
+    user_id: int
+
+    model_config = {"from_attributes": True}

@@ -8,11 +8,12 @@ from src.conf.constant import (
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,
     FORBIDDEN_FOR_NOT_OWNER,
     ROLE_ADMIN,
+    FORBIDDEN_FOR_OWNER,
 )
 from src.conf.errors import NotFoundError, ForbiddenError
-from src.database.models import Photo, Tag, User
+from src.database.models import Photo, Tag, User, Rating
 from src.repository.abstract import AbstractPhotoRepo
-from src.schemas.photos import PhotoIn
+from src.schemas.photos import PhotoIn, RatingIn
 from src.schemas.tags import TagIn
 
 
@@ -226,3 +227,35 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         self.db.commit()
         self.db.refresh(photo)
         return photo
+
+    async def rate_photo(
+        self, photo_id: int, rating_in: RatingIn, user_id: int
+    ) -> Rating:
+        """
+        Rates photo in database
+
+        :param photo_id: id of photo to rate
+        :type photo_id: int
+        :param rating_in: new rating
+        :type rating_in: RatingIn
+        :param user_id: id of user who rated photo
+        :type user_id: int
+        :return: updated photo
+        :rtype: Photo
+        """
+        photo = await self.get_photo_by_id(photo_id)
+        if user_id == photo.user_id:
+            raise ForbiddenError(detail=FORBIDDEN_FOR_OWNER)
+        rating = (
+            self.db.query(Rating)
+            .filter(Rating.photo_id == photo_id, Rating.user_id == user_id)
+            .first()
+        )
+        if rating is None:
+            rating = Rating(photo_id=photo_id, user_id=user_id, score=rating_in.score)
+            self.db.add(rating)
+        else:
+            rating.score = rating_in.score
+        self.db.commit()
+        self.db.refresh(rating)
+        return rating
