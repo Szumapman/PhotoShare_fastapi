@@ -324,7 +324,29 @@ class TestPostgresPhotoRepo(unittest.IsolatedAsyncioTestCase):
         assert photos_out[0].id == self.photo.id
         assert photos_out[1].id == self.photo_2.id
 
-        # add test for sort by rating when ready
+        self.db.query.return_value.outerjoin.return_value.group_by.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            self.photo_2,
+            self.photo,
+        ]
+        photos_out = await self.repo.get_photos(
+            self.skip, self.limit, sort_by="rating-desc"
+        )
+        print(photos_out)
+        assert len(photos_out) == 2
+        assert photos_out[0].id == self.photo_2.id
+        assert photos_out[1].id == self.photo.id
+
+        self.db.query.return_value.outerjoin.return_value.group_by.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            self.photo,
+            self.photo_2,
+        ]
+        photos_out = await self.repo.get_photos(
+            self.skip, self.limit, sort_by="rating-asc"
+        )
+        print(photos_out)
+        assert len(photos_out) == 2
+        assert photos_out[0].id == self.photo.id
+        assert photos_out[1].id == self.photo_2.id
 
     async def test_add_transform_photo_success(self):
         transform_params = ["param1", "param2"]

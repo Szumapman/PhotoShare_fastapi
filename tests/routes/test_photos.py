@@ -331,11 +331,14 @@ def test_get_photos_all_with_user_id_and_query_success(
 
 
 def test_get_photos_all_with_sort_by_success(
-    session, client_app, photo, photo_2, access_token_user_standard
+    session, client_app, photo, photo_2, rating, rating_2, access_token_user_standard
 ):
     session.query(Photo).delete()
+    session.query(Rating).delete()
     session.commit()
     session.add(photo)
+    session.add(rating)
+    session.add(rating_2)
     session.commit()
     sleep(1)
     session.add(photo_2)
@@ -346,25 +349,39 @@ def test_get_photos_all_with_sort_by_success(
             f"{API}{PHOTOS}?sort_by=upload_date-desc",
             headers={"Authorization": f"Bearer {access_token_user_standard}"},
         )
-    assert response.status_code == status.HTTP_200_OK, response.text
-    data = response.json()
-    assert len(data) == 2
-    assert data[0]["id"] == photo_2.id
-    assert data[1]["id"] == photo.id
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["id"] == photo_2.id
+        assert data[1]["id"] == photo.id
 
-    with patch.object(auth_service, "r") as mock_redis:
-        mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?sort_by=upload_date-asc",
             headers={"Authorization": f"Bearer {access_token_user_standard}"},
         )
-    assert response.status_code == status.HTTP_200_OK, response.text
-    data = response.json()
-    assert len(data) == 2
-    assert data[0]["id"] == photo.id
-    assert data[1]["id"] == photo_2.id
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["id"] == photo.id
+        assert data[1]["id"] == photo_2.id
 
-    # add sort by rating tests
+        response = client_app.get(
+            f"{API}{PHOTOS}?sort_by=rating-desc",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert data[0]["id"] == photo_2.id
+        assert data[1]["id"] == photo.id
+
+        response = client_app.get(
+            f"{API}{PHOTOS}?sort_by=rating-asc",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert data[0]["id"] == photo.id
+        assert data[1]["id"] == photo_2.id
 
 
 def test_get_photos_wrong_user_id_fail(

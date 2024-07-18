@@ -256,6 +256,16 @@ def rating():
     )
 
 
+@pytest.fixture(scope="function")
+def rating_2():
+    return Rating(
+        id=2,
+        photo_id=1,
+        user_id=2,
+        score=2,
+    )
+
+
 class MockCloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     async def upload_photo(self, photo: File) -> str:
         return PHOTO_URL
