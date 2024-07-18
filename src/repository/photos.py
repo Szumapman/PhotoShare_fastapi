@@ -1,7 +1,7 @@
 from typing import Type
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from src.conf.constant import (
     PHOTO_NOT_FOUND,
     USER_NOT_FOUND,
@@ -188,12 +188,17 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
                     else Photo.uploaded_at.asc()
                 )
             elif field == "rating":
-                query_base = query_base.order_by(
-                    Photo.average_rating.desc()
-                    if sort == "desc"
-                    else Photo.average_rating.asc()
+                query_base = (
+                    query_base.outerjoin(Rating)
+                    .group_by(Photo.id)
+                    .order_by(
+                        func.coalesce(func.avg(Rating.score), 0).desc()
+                        if sort == "desc"
+                        else func.coalesce(func.avg(Rating.score), 0).asc()
+                    )
                 )
         photos = query_base.offset(skip).limit(limit).all()
+
         return photos
 
     async def add_transform_photo(
@@ -206,8 +211,8 @@ class PostgresPhotoRepo(AbstractPhotoRepo):
         :type photo_id: int
         :param transform_params: list of transform params
         :type transform_params: list[str]
-        :param transform_url: url to transformed photo
-        :type transform_url: str
+        :param transformation_url: url to transformed photo
+        :type transformation_url: str
         :return: updated photo
         :rtype: Photo
         """

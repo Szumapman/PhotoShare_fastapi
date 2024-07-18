@@ -75,9 +75,8 @@ class Photo(Base):
 
     @hybrid_property
     def average_rating(self):
-        ratings_nuber = len(self.ratings)
-        if ratings_nuber > 0:
-            return sum(rating.score for rating in self.ratings) / ratings_nuber
+        if self.ratings:
+            return sum(rating.score for rating in self.ratings) / len(self.ratings)
         return None
 
 
