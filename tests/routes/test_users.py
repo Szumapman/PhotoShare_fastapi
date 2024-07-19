@@ -218,15 +218,15 @@ def test_delete_user_success(
         assert data["detail"] == USER_DELETE
         assert data["user"]["id"] == user_moderator.id
 
-    user_standard = session.query(User).filter_by(email=EMAIL_STANDARD).first()
-    response = client_app.delete(
-        f"{API}{USERS}/{user_standard.id}",
-        headers={"Authorization": f"Bearer {access_token_user_standard}"},
-    )
-    assert response.status_code == status.HTTP_200_OK, response.text
-    data = response.json()
-    assert data["detail"] == USER_DELETE
-    assert data["user"]["id"] == user_standard.id
+        user_standard = session.query(User).filter_by(email=EMAIL_STANDARD).first()
+        response = client_app.delete(
+            f"{API}{USERS}/{user_standard.id}",
+            headers={"Authorization": f"Bearer {access_token_user_standard}"},
+        )
+        assert response.status_code == status.HTTP_200_OK, response.text
+        data = response.json()
+        assert data["detail"] == USER_DELETE
+        assert data["user"]["id"] == user_standard.id
 
 
 def test_delete_user_fail_forbidden(
