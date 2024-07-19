@@ -1,33 +1,30 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.conf.constant import MAX_COMMENT_LENGTH
 
 
-class CommentIn(BaseModel):
+class CommentUpdate(BaseModel):
+    """
+    Comment model for updating comment.
+
+    :param content: content of comment
+    :type content: str
+    """
+
+    content: str = Field(default="", max_length=MAX_COMMENT_LENGTH)
+
+
+class CommentIn(CommentUpdate):
     """
     Comment model for creating / updating comment.
 
-    :param text: text of comment
-    :type text: str
+    :param photo_id: id of photo that comment belongs to
+    :type photo_id: int
     """
 
-    text: str = Field()
-
-    @field_validator("text")
-    def text_validator(cls, text: str) -> str:
-        """
-        Validate comment text.
-        :param text: text of comment
-        :return: comment text
-        :raise: ValueError if comment text is too long
-        """
-        if len(text) > MAX_COMMENT_LENGTH:
-            raise ValueError(
-                f"The comment is too long. The maximum length of a comment is: {MAX_COMMENT_LENGTH} signs"
-            )
-        return text
+    photo_id: int
 
 
 class CommentOut(CommentIn):
@@ -36,8 +33,6 @@ class CommentOut(CommentIn):
 
     :param id: id of comment
     :type id: int
-    :param photo_id: id of photo that comment belongs to
-    :type photo_id: int
     :param user_id: id of user that created comment
     :type user_id: int
     :param created_at: date and time when comment was created
@@ -47,9 +42,21 @@ class CommentOut(CommentIn):
     """
 
     id: int
-    photo_id: int
     user_id: int
     created_at: datetime
     updated_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CommentInfo(BaseModel):
+    """
+    Model for returning info about performed operation and comment.
+
+    Attributes:
+        comment (CommentOut): Comment model for returning comment from database.
+        detail (str): Detail of performed operation.
+    """
+
+    comment: CommentOut
+    detail: str

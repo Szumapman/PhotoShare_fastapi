@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Type
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
-from src.database.models import User, Photo, Rating
-from src.schemas.photos import PhotoIn, PhotoOut, RatingIn
+from src.database.models import User, Photo, Rating, Comment
+from src.schemas.photos import PhotoIn, RatingIn
 
 
 class AbstractUserRepo(abc.ABC):
@@ -350,3 +350,75 @@ class AbstractPhotoRepo(abc.ABC):
         :return: updated photo
         :rtype: Rating
         """
+
+
+class AbstractCommentRepo(abc.ABC):
+    """
+    Abstract class for comment repository
+    """
+
+    @abc.abstractmethod
+    async def create_comment(
+        self, comment_content: str, photo_id: int, user_id: int
+    ) -> Comment:
+        """
+        Creates comment in database
+
+        :param comment_content: text of comment
+        :type comment_content: str
+        :param photo_id: id of photo that comment belongs to
+        :type photo_id: int
+        :param user_id: id of user that created comment
+        :type user_id: int
+        """
+        pass
+
+    @abc.abstractmethod
+    async def get_comments(self, photo_id: int) -> list[Comment]:
+        """
+        Gets comments for a photo from database
+
+        :param photo_id: id of photo to get comments for
+        :type photo_id: int
+        :return: list of comments
+        :rtype: list[Comment]
+        """
+        pass
+
+    @abc.abstractmethod
+    async def get_comment_by_id(self, comment_id: int) -> Comment:
+        """
+        Gets comment from database by id
+
+        :param comment_id: id of comment to get
+        :type comment_id: int
+        :return: comment
+        :rtype: Comment
+        """
+        pass
+
+    @abc.abstractmethod
+    async def update_comment(
+        self, comment_id: int, user_id: int, comment_content: str
+    ) -> Comment:
+        """
+        Updates comment in database
+
+        :param comment_id:
+        :param user_id:
+        :param comment_content:
+        :return:
+        """
+        pass
+
+    @abc.abstractmethod
+    async def delete_comment(self, comment_id: int) -> Comment:
+        """
+        Delete comment in the database.
+
+        :param comment_id: id of comment to delete
+        :type comment_id: int
+        :return: deleted comment
+        :rtype: Comment
+        """
+        pass

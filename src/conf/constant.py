@@ -17,6 +17,7 @@ API = API_V1
 AUTH = "/auth"
 USERS = "/users"
 PHOTOS = "/photos"
+COMMENTS = "/comments"
 
 ACCESS_TOKEN = "access_token"
 REFRESH_TOKEN = "refresh_token"
@@ -45,7 +46,7 @@ FORBIDDEN_FOR_USER_AND_MODERATOR = "Only admin can perform this operation."
 FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR = (
     "Only owner or admin can perform this operation."
 )
-FORBIDDEN_FOR_NOT_OWNER = "Only the owner of the picture can perform this operation."
+FORBIDDEN_FOR_NOT_OWNER = "Only the owner can perform this operation."
 FORBIDDEN_FOR_OWNER = "Only not-owner can perform this operation."
 BANNED_USER = "User is banned."
 
@@ -92,3 +93,8 @@ PHOTO_DELETED = "Photo deleted"
 PHOTO_UPDATED = "Photo updated"
 PHOTO_RATED = "Photo rated"
 RATING_DELETED = "Rating deleted"
+
+COMMENT_CREATED = "Comment created"
+COMMENT_NOT_FOUND = "Comment not found"
+COMMENT_UPDATED = "Comment updated"
+COMMENT_DELETED = "Comment deleted"

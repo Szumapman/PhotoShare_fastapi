@@ -1,5 +1,10 @@
 from src.database.db import get_db
-from src.repository.abstract import AbstractUserRepo, AbstractPhotoRepo
+from src.repository.abstract import (
+    AbstractUserRepo,
+    AbstractPhotoRepo,
+    AbstractCommentRepo,
+)
+from src.repository.comments import PostgresCommentRepo
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.services.abstract import (
@@ -66,3 +71,12 @@ def get_photo_repository() -> AbstractPhotoRepo:
     :return: photo repository inherited from AbstractPhotoRepo
     """
     return PostgresPhotoRepo(next(get_db()))
+
+
+def get_comment_repository() -> AbstractCommentRepo:
+    """
+    Function to get comment repository.
+
+    :return: comment repository inherited from AbstractCommentRepo
+    """
+    return PostgresCommentRepo(next(get_db()))

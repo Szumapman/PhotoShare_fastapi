@@ -1,8 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 
-from src.routes import auth, users
-from src.routes import photos
+from src.routes import auth, users, photos, comments
 from src.conf.constant import API
 from src.conf.errors import (
     NotFoundError,
@@ -17,6 +16,7 @@ app = FastAPI()
 app.include_router(auth.router, prefix=API)
 app.include_router(users.router, prefix=API)
 app.include_router(photos.router, prefix=API)
+app.include_router(comments.router, prefix=API)
 
 
 @app.exception_handler(NotFoundError)
