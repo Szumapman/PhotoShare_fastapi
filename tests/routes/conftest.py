@@ -5,13 +5,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from main import app
-from src.database.models import Base, User, Photo, Rating
+from src.database.models import Base, User, Photo, Rating, Comment
 from src.database.dependencies import (
     get_user_repository,
     get_avatar_provider,
     get_photo_repository,
     get_photo_storage_provider,
+    get_comment_repository,
 )
+from src.repository.comments import PostgresCommentRepo
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.schemas.photos import TransformIn
@@ -73,6 +75,12 @@ def client_app(session):
         finally:
             session.close()
 
+    def override_get_comment_repository():
+        try:
+            yield PostgresCommentRepo(session)
+        finally:
+            session.close()
+
     def override_get_photo_storage_provider():
         return MockCloudinaryPhotoStorageProvider()
 
@@ -80,6 +88,7 @@ def client_app(session):
         get_user_repository: override_get_user_repository,
         get_avatar_provider: override_get_avatar_provider,
         get_photo_repository: override_get_photo_repository,
+        get_comment_repository: override_get_comment_repository,
         get_photo_storage_provider: override_get_photo_storage_provider,
     }
 
@@ -263,6 +272,41 @@ def rating_2():
         photo_id=1,
         user_id=2,
         score=2,
+    )
+
+
+@pytest.fixture(scope="function")
+def comment_in_json():
+    return {
+        "content": "test comment",
+        "photo_id": 1,
+    }
+
+
+@pytest.fixture(scope="function")
+def comment_update_in_json():
+    return {
+        "content": "test comment update",
+    }
+
+
+@pytest.fixture(scope="function")
+def comment():
+    return Comment(
+        id=1,
+        content="test comment 1",
+        photo_id=1,
+        user_id=1,
+    )
+
+
+@pytest.fixture(scope="function")
+def comment_2():
+    return Comment(
+        id=2,
+        content="test comment 2",
+        photo_id=1,
+        user_id=2,
     )
 
 
