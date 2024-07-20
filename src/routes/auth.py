@@ -72,6 +72,7 @@ async def signup(
     :type avatar_provider: AbstractAvatarProvider
     :return: info about the created user
     :rtype: UserInfo
+    :raise: ConflictError: if account with this email or username already exists
     """
     if await user_repo.get_user_by_email(user.email):
         raise ConflictError(
