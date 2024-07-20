@@ -49,3 +49,15 @@ class UnauthorizedError(Exception):
     def __init__(self, message=None, detail=None):
         super().__init__(message)
         self.detail = detail
+
+
+class ConflictError(Exception):
+    """
+    Raised when you try to create a resource that already exists and must be unique.
+
+    :param detail: A detail of the conflict.
+    """
+
+    def __init__(self, message=None, detail=None):
+        super().__init__(message)
+        self.detail = detail
