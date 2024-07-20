@@ -24,7 +24,7 @@ from src.conf.constant import (
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
-from src.conf.errors import NotFoundError
+from src.conf.errors import NotFoundError, ConflictError
 
 router = APIRouter(prefix=AUTH, tags=["auth"])
 security = HTTPBearer()
@@ -74,13 +74,11 @@ async def signup(
     :rtype: UserInfo
     """
     if await user_repo.get_user_by_email(user.email):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+        raise ConflictError(
             detail="Account with this email already exists",
         )
     if await user_repo.get_user_by_username(user.username):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+        raise ConflictError(
             detail="Account with this username already exists",
         )
     user.password = password_handler.get_password_hash(user.password)
