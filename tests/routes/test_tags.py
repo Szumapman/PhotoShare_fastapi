@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from fastapi import status
 
-from src.schemas.tags import TagIn
 from src.services.auth import auth_service
 from src.database.models import Tag
 
