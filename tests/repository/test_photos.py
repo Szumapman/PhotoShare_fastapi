@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.database.models import Tag, User, Photo, Rating
-from src.schemas.photos import TagIn, PhotoIn, RatingIn
+from src.schemas.photos import PhotoIn, RatingIn
+from src.schemas.tags import TagIn
 from src.repository.photos import PostgresPhotoRepo
 from src.conf.constant import (
     ROLE_STANDARD,
