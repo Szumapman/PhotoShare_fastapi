@@ -3,8 +3,10 @@ from src.repository.abstract import (
     AbstractUserRepo,
     AbstractPhotoRepo,
     AbstractCommentRepo,
+    AbstractTagRepo,
 )
 from src.repository.comments import PostgresCommentRepo
+from src.repository.tags import PostgresTagRepo
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.services.abstract import (
@@ -80,3 +82,10 @@ def get_comment_repository() -> AbstractCommentRepo:
     :return: comment repository inherited from AbstractCommentRepo
     """
     return PostgresCommentRepo(next(get_db()))
+
+
+def get_tag_repository() -> AbstractTagRepo:
+    """
+    Function to get tag repository.
+    """
+    return PostgresTagRepo(next(get_db()))

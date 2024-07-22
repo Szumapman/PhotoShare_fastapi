@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Type
 
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
-from src.database.models import User, Photo, Rating, Comment
+from src.database.models import User, Photo, Rating, Comment, Tag
 from src.schemas.photos import PhotoIn, RatingIn
 
 
@@ -420,5 +420,91 @@ class AbstractCommentRepo(abc.ABC):
         :type comment_id: int
         :return: deleted comment
         :rtype: Comment
+        """
+        pass
+
+
+class AbstractTagRepo(abc.ABC):
+    """
+    Abstract class for tag repository
+    """
+
+    @abc.abstractmethod
+    async def get_tag_by_name(self, tag_name: str) -> Tag | None:
+        """
+        Gets tag from database by name
+
+        :param tag_name: name of tag to get
+        :type tag_name: str
+        :return: tag or None if not found
+        :rtype: Tag | None
+        """
+        pass
+
+    @abc.abstractmethod
+    async def create_tag(self, tag_name: str) -> Tag:
+        """
+        Create a new tag.
+
+        :param tag_name: tag name
+        :type tag_name: str
+        :return: new tag
+        :rtype: Tag
+        """
+        pass
+
+    @abc.abstractmethod
+    async def get_tags(
+        self, sort_by: str | None, skip: int, limit: int
+    ) -> list[Type[Tag]]:
+        """
+        Gets all tags from database
+
+        :param sort_by: how to sort the tags (if not none)
+        :type sort_by: str | None
+        :param skip: number of tags to skip
+        :type skip: int
+        :param limit: number of tags to return
+        :type limit: int
+        :return: list of tags
+        :rtype: list[Type[Tag]]
+        """
+        pass
+
+    @abc.abstractmethod
+    async def get_tag_by_id(self, tag_id: int) -> Tag:
+        """
+        Gets tag from database by id
+
+        :param tag_id: id of tag to get
+        :type tag_id: int
+        :return: tag
+        :rtype: Tag
+        """
+        pass
+
+    @abc.abstractmethod
+    async def update_tag(self, tag_id: int, tag_name: str) -> Tag:
+        """
+        Updates tag in database
+
+        :param tag_id: id of tag to update
+        :type tag_id: int
+        :param tag_name: new name of tag
+        :type tag_name: str
+        :return: updated tag
+        :rtype: Tag
+        """
+        pass
+
+    @abc.abstractmethod
+    async def delete_tag(self, tag_id: int) -> Tag:
+        """
+        Deletes tag from database
+
+        :param tag_id: id of tag to delete
+        :type tag_id: int
+        :return: deleted tag
+        :rtype: Tag
         """
         pass

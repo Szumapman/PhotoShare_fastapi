@@ -45,3 +45,17 @@ class TagOut(TagIn):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TagInfo(BaseModel):
+    """
+    Model for returning info about performed operation and tag.
+
+    :param tag: tag
+    :type tag: TagOut
+    :param detail: detail about performed operation
+    :type detail: str
+    """
+
+    tag: TagOut
+    detail: str

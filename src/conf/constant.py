@@ -18,6 +18,7 @@ AUTH = "/auth"
 USERS = "/users"
 PHOTOS = "/photos"
 COMMENTS = "/comments"
+TAGS = "/tags"
 
 ACCESS_TOKEN = "access_token"
 REFRESH_TOKEN = "refresh_token"
@@ -63,6 +64,7 @@ TOKEN_NOT_FOUND = "Token not found"
 USER_NOT_FOUND = "User not found"
 PHOTO_NOT_FOUND = "Photo not found"
 RATING_NOT_FOUND = "Rating not found"
+TAG_NOT_FOUND = "Tag not found"
 
 HTTP_404_NOT_FOUND_DETAILS = [TOKEN_NOT_FOUND, USER_NOT_FOUND, PHOTO_NOT_FOUND]
 
@@ -98,3 +100,9 @@ COMMENT_CREATED = "Comment created"
 COMMENT_NOT_FOUND = "Comment not found"
 COMMENT_UPDATED = "Comment updated"
 COMMENT_DELETED = "Comment deleted"
+
+TAG_CREATED = "Tag created"
+TAG_ALREADY_EXISTS = "Tag already exists"
+TAG_UPDATED = "Tag updated"
+TAG_DELETED = "Tag deleted"
+TAGS_GET_ENUM = ["asc", "desc"]

@@ -1,13 +1,14 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 
-from src.routes import auth, users, photos, comments
+from src.routes import auth, users, photos, comments, tags
 from src.conf.constant import API
 from src.conf.errors import (
     NotFoundError,
     ForbiddenError,
     UnauthorizedError,
     PhotoStorageProviderError,
+    ConflictError,
 )
 
 
@@ -17,6 +18,7 @@ app.include_router(auth.router, prefix=API)
 app.include_router(users.router, prefix=API)
 app.include_router(photos.router, prefix=API)
 app.include_router(comments.router, prefix=API)
+app.include_router(tags.router, prefix=API)
 
 
 @app.exception_handler(NotFoundError)
@@ -32,6 +34,11 @@ async def forbidden_exception_handler(request, exc):
 @app.exception_handler(UnauthorizedError)
 async def unauthorized_exception_handler(request, exc):
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=exc.detail)
+
+
+@app.exception_handler(ConflictError)
+async def conflict_exception_handler(request, exc):
+    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.detail)
 
 
 @app.exception_handler(PhotoStorageProviderError)
