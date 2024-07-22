@@ -5,15 +5,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from main import app
-from src.database.models import Base, User, Photo, Rating, Comment
+from src.database.models import Base, User, Photo, Rating, Comment, Tag
 from src.database.dependencies import (
     get_user_repository,
     get_avatar_provider,
     get_photo_repository,
     get_photo_storage_provider,
     get_comment_repository,
+    get_tag_repository,
 )
 from src.repository.comments import PostgresCommentRepo
+from src.repository.tags import PostgresTagRepo
 from src.repository.users import PostgresUserRepo
 from src.repository.photos import PostgresPhotoRepo
 from src.schemas.photos import TransformIn
@@ -81,6 +83,12 @@ def client_app(session):
         finally:
             session.close()
 
+    def override_get_tag_repository():
+        try:
+            yield PostgresTagRepo(session)
+        finally:
+            session.close()
+
     def override_get_photo_storage_provider():
         return MockCloudinaryPhotoStorageProvider()
 
@@ -89,6 +97,7 @@ def client_app(session):
         get_avatar_provider: override_get_avatar_provider,
         get_photo_repository: override_get_photo_repository,
         get_comment_repository: override_get_comment_repository,
+        get_tag_repository: override_get_tag_repository,
         get_photo_storage_provider: override_get_photo_storage_provider,
     }
 
@@ -307,6 +316,29 @@ def comment_2():
         content="test comment 2",
         photo_id=1,
         user_id=2,
+    )
+
+
+@pytest.fixture(scope="function")
+def tag_in_json():
+    return {
+        "name": "tag1 test",
+    }
+
+
+@pytest.fixture(scope="function")
+def tag():
+    return Tag(
+        id=1,
+        name="tag1 test",
+    )
+
+
+@pytest.fixture(scope="function")
+def tag_2():
+    return Tag(
+        id=2,
+        name="tag2 test",
     )
 
 
