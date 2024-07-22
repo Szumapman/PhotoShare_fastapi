@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 
 from src.conf.constant import (
-    PHOTO_NOT_FOUND,
     COMMENT_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER,
 )
