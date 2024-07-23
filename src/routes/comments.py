@@ -13,8 +13,7 @@ from src.conf.constant import (
     ROLE_ADMIN,
     ROLE_MODERATOR,
     COMMENT_DELETED,
-    REQUEST_AMOUNT_LIMIT,
-    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER,
     RATE_LIMITER_INFO,
 )
 from src.schemas.comments import CommentInfo, CommentIn, CommentOut, CommentUpdate
@@ -26,11 +25,7 @@ router = APIRouter(prefix=COMMENTS, tags=["comments"])
 @router.post(
     "/",
     description=f"This endpoint is used to create new comment. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     status_code=status.HTTP_201_CREATED,
     response_model=CommentInfo,
 )

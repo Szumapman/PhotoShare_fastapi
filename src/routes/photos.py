@@ -39,8 +39,7 @@ from src.conf.constant import (
     PHOTO_DELETED,
     PHOTO_UPDATED,
     PHOTO_RATED,
-    REQUEST_AMOUNT_LIMIT,
-    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER,
     RATE_LIMITER_INFO,
 )
 
@@ -51,11 +50,7 @@ router = APIRouter(prefix=PHOTOS, tags=["photos"])
     "/",
     description="This endpoint is used to get all photos (paginated). "
     f"You can search by keywords in description or tags. You can also sort by date or rating. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=list[PhotoOut],
 )
 async def get_photos(
@@ -105,11 +100,7 @@ async def get_photos(
 @router.post(
     "/",
     description=f"This endpoint is used to upload new photo. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=PhotoInfo,
     status_code=status.HTTP_201_CREATED,
 )
@@ -152,11 +143,7 @@ async def create_photo(
 @router.get(
     "/{photo_id}",
     description=f"This endpoint is used to get photo by id. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=PhotoOut,
 )
 async def get_photo(
@@ -183,11 +170,7 @@ async def get_photo(
 @router.get(
     "/{photo_id}/qr_code",
     description=f"This endpoint is used to get photo qr code. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_class=StreamingResponse,
 )
 async def get_qr_code(
@@ -233,11 +216,7 @@ async def get_qr_code(
 @router.delete(
     "/{photo_id}",
     description=f"This endpoint is used to delete photo by id. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=PhotoInfo,
 )
 async def delete_photo(
@@ -270,11 +249,7 @@ async def delete_photo(
 @router.patch(
     "/{photo_id}",
     description=f"This endpoint is used to update photo by id. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=PhotoInfo,
 )
 async def update_photo(
@@ -304,11 +279,7 @@ async def update_photo(
 @router.post(
     "/{photo_id}/transform",
     description=f"This endpoint is used to transform photo. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=PhotoInfo,
 )
 async def transform_photo(

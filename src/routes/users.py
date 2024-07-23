@@ -18,8 +18,7 @@ from src.conf.constant import (
     USER_UPDATE,
     USER_DELETE,
     DEFAULT_AVATAR_URL_START_V1_GRAVATAR,
-    REQUEST_AMOUNT_LIMIT,
-    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER,
     RATE_LIMITER_INFO,
 )
 from src.schemas.users import (
@@ -44,11 +43,7 @@ router = APIRouter(prefix=USERS, tags=["users"])
     "/",
     description=f"This endpoint is used to get all users. "
     f"Depending on the user role, the endpoint will return different data views. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=list[UserDb] | list[UserModeratorView] | list[UserPublic],
 )
 async def get_users(
@@ -79,11 +74,7 @@ async def get_users(
     "/{user_id}",
     description=f"This endpoint is used to get user by id. "
     f"Depending on the user role, the endpoint will return different data views. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=UserDb | UserModeratorView | UserPublic,
 )
 async def get_user(
@@ -155,11 +146,7 @@ async def update_user(
 @router.patch(
     "/avatar",
     description=f"This endpoint is used to update user avatar. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=UserInfo,
 )
 async def update_user_avatar(

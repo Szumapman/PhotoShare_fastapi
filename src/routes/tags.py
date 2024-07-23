@@ -18,8 +18,7 @@ from src.conf.constant import (
     ROLE_MODERATOR,
     TAGS_GET_ENUM,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
-    REQUEST_AMOUNT_LIMIT,
-    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER,
     RATE_LIMITER_INFO,
 )
 
@@ -29,11 +28,7 @@ router = APIRouter(prefix=TAGS, tags=["tags"])
 @router.post(
     "/",
     description=f"This endpoint is used to create new tag. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=TagInfo,
     status_code=status.HTTP_201_CREATED,
 )
@@ -62,11 +57,7 @@ async def create_tag(
 @router.get(
     "/",
     description=f"This endpoint is used to get all tags. {RATE_LIMITER_INFO}",
-    dependencies=[
-        Depends(
-            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
-        )
-    ],
+    dependencies=[Depends(RATE_LIMITER)],
     response_model=list[TagOut],
 )
 async def get_tags(
