@@ -1,3 +1,5 @@
+from fastapi_limiter.depends import RateLimiter
+
 """
 Set of constants used in the project.
 """
@@ -107,6 +109,9 @@ TAG_UPDATED = "Tag updated"
 TAG_DELETED = "Tag deleted"
 TAGS_GET_ENUM = ["asc", "desc"]
 
-REQUEST_AMOUNT_LIMIT = 100
+REQUEST_AMOUNT_LIMIT = 180
 RATE_LIMIT_TIME_IN_SECONDS = 60
+RATE_LIMITER = RateLimiter(
+    times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS
+)
 RATE_LIMITER_INFO = f"It is rate limited to {REQUEST_AMOUNT_LIMIT} requests per {RATE_LIMIT_TIME_IN_SECONDS} seconds."
