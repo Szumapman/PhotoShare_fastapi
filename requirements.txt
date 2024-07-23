@@ -13,3 +13,4 @@ prompt-toolkit==3.0.43; python_version >= '3.7'
 validator-collection==1.5.0
 cloudinary==1.40.0
 qrcode[pil]==7.4.2; python_version >= '3.7'
+fastapi-limiter==0.1.6; python_version >= '3.9'
