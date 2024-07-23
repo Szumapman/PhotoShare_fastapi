@@ -8,6 +8,7 @@ from fastapi import (
     Query,
 )
 from fastapi.responses import StreamingResponse
+from fastapi_limiter.depends import RateLimiter
 
 from src.conf.errors import ForbiddenError, NotFoundError
 from src.schemas.users import UserDb
@@ -38,12 +39,25 @@ from src.conf.constant import (
     PHOTO_DELETED,
     PHOTO_UPDATED,
     PHOTO_RATED,
+    REQUEST_AMOUNT_LIMIT,
+    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER_INFO,
 )
 
 router = APIRouter(prefix=PHOTOS, tags=["photos"])
 
 
-@router.get("/", response_model=list[PhotoOut])
+@router.get(
+    "/",
+    description="This endpoint is used to get all photos (paginated). "
+    f"You can search by keywords in description or tags. You can also sort by date or rating. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=list[PhotoOut],
+)
 async def get_photos(
     query: str | None = Query(
         None, description="Search by keywords in description or tags"
@@ -88,7 +102,17 @@ async def get_photos(
     return photos
 
 
-@router.post("/", response_model=PhotoInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    description=f"This endpoint is used to upload new photo. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=PhotoInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_photo(
     photo_info: PhotoIn,
     photo: UploadFile = File(),
@@ -112,7 +136,7 @@ async def create_photo(
     :param photo_repo: repository to work with
     :type photo_repo: AbstractPhotoRepo
     :return: photo with confirmation of upload
-    :rtype: PhotoCreated
+    :rtype: PhotoInfo
     """
     photo_url = await photo_storage_provider.upload_photo(photo)
     uploaded_photo = await photo_repo.upload_photo(
@@ -125,7 +149,16 @@ async def create_photo(
     )
 
 
-@router.get("/{photo_id}", response_model=PhotoOut)
+@router.get(
+    "/{photo_id}",
+    description=f"This endpoint is used to get photo by id. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=PhotoOut,
+)
 async def get_photo(
     photo_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -147,7 +180,16 @@ async def get_photo(
     return photo
 
 
-@router.get("/{photo_id}/qr_code", response_class=StreamingResponse)
+@router.get(
+    "/{photo_id}/qr_code",
+    description=f"This endpoint is used to get photo qr code. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_class=StreamingResponse,
+)
 async def get_qr_code(
     photo_id: int,
     transform_id: int | None = Query(
@@ -188,7 +230,16 @@ async def get_qr_code(
     return await qr_code_provider.stream_qr_code(photo_url)
 
 
-@router.delete("/{photo_id}", response_model=PhotoInfo)
+@router.delete(
+    "/{photo_id}",
+    description=f"This endpoint is used to delete photo by id. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=PhotoInfo,
+)
 async def delete_photo(
     photo_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -209,14 +260,23 @@ async def delete_photo(
     :param photo_storage_provider: photo storage provider to delete photo from it
     :type photo_storage_provider: AbstractPhotoStorageProvider
     :return: deleted photo
-    :rtype: PhotoOut
+    :rtype: PhotoInfo
     """
     photo = await photo_repo.delete_photo(photo_id, current_user.id, current_user.role)
     await photo_storage_provider.delete_photo(photo.photo_url)
     return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_DELETED)
 
 
-@router.patch("/{photo_id}", response_model=PhotoInfo)
+@router.patch(
+    "/{photo_id}",
+    description=f"This endpoint is used to update photo by id. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=PhotoInfo,
+)
 async def update_photo(
     photo_id: int,
     photo_info: PhotoIn,
@@ -235,13 +295,22 @@ async def update_photo(
     :param photo_repo: repository to work with
     :type photo_repo: AbstractPhotoRepo
     :return: updated photo
-    :rtype: PhotoOut
+    :rtype: PhotoInfo
     """
     photo = await photo_repo.update_photo(photo_id, photo_info, current_user.id)
     return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_UPDATED)
 
 
-@router.post("/{photo_id}/transform", response_model=PhotoInfo)
+@router.post(
+    "/{photo_id}/transform",
+    description=f"This endpoint is used to transform photo. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=PhotoInfo,
+)
 async def transform_photo(
     photo_id: int,
     transform: TransformIn,
@@ -265,7 +334,7 @@ async def transform_photo(
     :param photo_repo: repository to work with
     :type photo_repo: AbstractPhotoRepo
     :return: updated photo
-    :rtype: PhotoOut
+    :rtype: PhotoInfo
     :raise: ForbiddenError if user who performs request is not owner of photo
     """
     photo = await photo_repo.get_photo_by_id(photo_id)
@@ -280,7 +349,11 @@ async def transform_photo(
     return PhotoInfo(photo=PhotoOut.model_validate(photo), detail=PHOTO_UPDATED)
 
 
-@router.post("/{photo_id}/rate", response_model=RatingInfo)
+@router.post(
+    "/{photo_id}/rate",
+    description="This endpoint is used to rate photo.",
+    response_model=RatingInfo,
+)
 async def rate_photo(
     photo_id: int,
     rating_in: RatingIn,
@@ -298,14 +371,18 @@ async def rate_photo(
     :type current_user: UserDb
     :param photo_repo: repository to work with
     :type photo_repo: AbstractPhotoRepo
-    :return: updated photo
-    :rtype: PhotoOut
+    :return: new rating of photo
+    :rtype: RatingInfo
     """
     rating = await photo_repo.rate_photo(photo_id, rating_in, current_user.id)
     return RatingInfo(rating=RatingOut.model_validate(rating), detail=PHOTO_RATED)
 
 
-@router.delete("/{photo_id}/rate", response_model=RatingInfo)
+@router.delete(
+    "/{photo_id}/rate",
+    description="This endpoint is used to delete photo rating.",
+    response_model=RatingInfo,
+)
 async def delete_rating(
     photo_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),

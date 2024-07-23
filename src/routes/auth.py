@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Security, Depends
+from fastapi_limiter.depends import RateLimiter
 from fastapi.security import (
     OAuth2PasswordRequestForm,
     HTTPAuthorizationCredentials,
@@ -21,6 +22,9 @@ from src.conf.constant import (
     BANNED_USER,
     INCORRECT_USERNAME_OR_PASSWORD,
     USER_NOT_FOUND,
+    REQUEST_AMOUNT_LIMIT,
+    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER_INFO,
 )
 from src.schemas.users import UserInfo, UserIn, UserDb, TokenModel
 from src.database.models import User
@@ -52,7 +56,17 @@ async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
     return TokenModel(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/signup", response_model=UserInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/signup",
+    description=f"This endpoint is used to create a new user account. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=UserInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def signup(
     user: UserIn,
     user_repo: AbstractUserRepo = Depends(get_user_repository),
@@ -88,7 +102,16 @@ async def signup(
     return UserInfo(user=UserDb.model_validate(user), detail=USER_CREATED)
 
 
-@router.post("/login", response_model=TokenModel)
+@router.post(
+    "/login",
+    description=f"This endpoint is used to login a user. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=TokenModel,
+)
 async def login(
     body: OAuth2PasswordRequestForm = Depends(),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
@@ -129,7 +152,11 @@ async def login(
     return await __set_tokens(user, user_repo)
 
 
-@router.post("/logout", response_model=UserInfo)
+@router.post(
+    "/logout",
+    description="This endpoint is used to logout current user from current session.",
+    response_model=UserInfo,
+)
 async def logout(
     current_user: User = Depends(auth_service.get_current_user),
     credentials: HTTPAuthorizationCredentials = Security(security),
@@ -154,7 +181,16 @@ async def logout(
     return UserInfo(user=UserDb.model_validate(user), detail=USER_LOGOUT)
 
 
-@router.get("/refresh_token", response_model=TokenModel)
+@router.get(
+    "/refresh_token",
+    description=f"This endpoint is used to refresh tokens, using the refresh token. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=TokenModel,
+)
 async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     user_repo: AbstractUserRepo = Depends(get_user_repository),

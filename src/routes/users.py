@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from fastapi_limiter.depends import RateLimiter
 
 from src.services.auth import auth_service
 from src.database.dependencies import (
@@ -17,6 +18,9 @@ from src.conf.constant import (
     USER_UPDATE,
     USER_DELETE,
     DEFAULT_AVATAR_URL_START_V1_GRAVATAR,
+    REQUEST_AMOUNT_LIMIT,
+    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER_INFO,
 )
 from src.schemas.users import (
     UserDb,
@@ -37,7 +41,15 @@ router = APIRouter(prefix=USERS, tags=["users"])
 
 
 @router.get(
-    "/", response_model=list[UserDb] | list[UserModeratorView] | list[UserPublic]
+    "/",
+    description=f"This endpoint is used to get all users. "
+    f"Depending on the user role, the endpoint will return different data views. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=list[UserDb] | list[UserModeratorView] | list[UserPublic],
 )
 async def get_users(
     current_user: User = Depends(auth_service.get_current_user),
@@ -63,7 +75,17 @@ async def get_users(
     return [UserPublic.model_validate(user) for user in users]
 
 
-@router.get("/{user_id}", response_model=UserDb | UserModeratorView | UserPublic)
+@router.get(
+    "/{user_id}",
+    description=f"This endpoint is used to get user by id. "
+    f"Depending on the user role, the endpoint will return different data views. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=UserDb | UserModeratorView | UserPublic,
+)
 async def get_user(
     user_id: int,
     current_user: User = Depends(auth_service.get_current_user),
@@ -91,7 +113,9 @@ async def get_user(
     return UserPublic.model_validate(user)
 
 
-@router.patch("/", response_model=UserInfo)
+@router.patch(
+    "/", description=f"This endpoint is used to update user.", response_model=UserInfo
+)
 async def update_user(
     new_user_data: UserIn,
     current_user: User = Depends(auth_service.get_current_user),
@@ -128,7 +152,16 @@ async def update_user(
     return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)
 
 
-@router.patch("/avatar", response_model=UserInfo)
+@router.patch(
+    "/avatar",
+    description=f"This endpoint is used to update user avatar. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=UserInfo,
+)
 async def update_user_avatar(
     file: UploadFile = File(...),
     current_user: User = Depends(auth_service.get_current_user),
@@ -159,7 +192,11 @@ async def update_user_avatar(
     return UserInfo(user=UserDb.model_validate(user), detail=USER_UPDATE)
 
 
-@router.delete("/{user_id}", response_model=UserInfo)
+@router.delete(
+    "/{user_id}",
+    description=f"This endpoint is used to delete user.",
+    response_model=UserInfo,
+)
 async def delete_user(
     user_id: int,
     current_user: User = Depends(auth_service.get_current_user),
@@ -187,7 +224,11 @@ async def delete_user(
         raise ForbiddenError(detail=FORBIDDEN_FOR_USER_AND_MODERATOR)
 
 
-@router.patch("/{user_id}/active_status", response_model=UserInfo)
+@router.patch(
+    "/{user_id}/active_status",
+    description=f"This endpoint is used to set user active status.",
+    response_model=UserInfo,
+)
 async def set_active_status(
     user_id: int,
     active_status: ActiveStatus,
@@ -218,7 +259,11 @@ async def set_active_status(
     )
 
 
-@router.patch("/{user_id}/set_role", response_model=UserInfo)
+@router.patch(
+    "/{user_id}/set_role",
+    description="This endpoint is used to set user role.",
+    response_model=UserInfo,
+)
 async def set_role(
     user_id: int,
     role: UserRoleIn,

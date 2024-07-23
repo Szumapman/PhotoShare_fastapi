@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from fastapi_limiter.depends import RateLimiter
 
 from src.conf.errors import ForbiddenError
 from src.database.dependencies import get_comment_repository, get_photo_repository
@@ -12,6 +13,9 @@ from src.conf.constant import (
     ROLE_ADMIN,
     ROLE_MODERATOR,
     COMMENT_DELETED,
+    REQUEST_AMOUNT_LIMIT,
+    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER_INFO,
 )
 from src.schemas.comments import CommentInfo, CommentIn, CommentOut, CommentUpdate
 from src.schemas.users import UserDb
@@ -19,7 +23,17 @@ from src.schemas.users import UserDb
 router = APIRouter(prefix=COMMENTS, tags=["comments"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CommentInfo)
+@router.post(
+    "/",
+    description=f"This endpoint is used to create new comment. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    status_code=status.HTTP_201_CREATED,
+    response_model=CommentInfo,
+)
 async def create_comment(
     comment: CommentIn,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -48,7 +62,11 @@ async def create_comment(
     )
 
 
-@router.get("/", response_model=list[CommentOut])
+@router.get(
+    "/",
+    description="This endpoint is used to get all comments for a specific photo.",
+    response_model=list[CommentOut],
+)
 async def get_comments(
     photo_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -74,7 +92,11 @@ async def get_comments(
     return [CommentOut.model_validate(comment) for comment in comments]
 
 
-@router.get("/{comment_id}", response_model=CommentOut)
+@router.get(
+    "/{comment_id}",
+    description="This endpoint is used to get a comment by id.",
+    response_model=CommentOut,
+)
 async def get_comment(
     comment_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -96,7 +118,11 @@ async def get_comment(
     return CommentOut.model_validate(comment)
 
 
-@router.patch("/{comment_id}", response_model=CommentInfo)
+@router.patch(
+    "/{comment_id}",
+    description="This endpoint is used to update a comment.",
+    response_model=CommentInfo,
+)
 async def update_comment(
     comment_id: int,
     comment: CommentUpdate,
@@ -125,7 +151,11 @@ async def update_comment(
     )
 
 
-@router.delete("/{comment_id}", response_model=CommentInfo)
+@router.delete(
+    "/{comment_id}",
+    description="This endpoint is used to delete a comment.",
+    response_model=CommentInfo,
+)
 async def delete_comment(
     comment_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, Query
+from fastapi_limiter.depends import RateLimiter
 
 from src.conf.errors import ForbiddenError, ConflictError
 from src.database.dependencies import get_tag_repository
@@ -17,12 +18,25 @@ from src.conf.constant import (
     ROLE_MODERATOR,
     TAGS_GET_ENUM,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
+    REQUEST_AMOUNT_LIMIT,
+    RATE_LIMIT_TIME_IN_SECONDS,
+    RATE_LIMITER_INFO,
 )
 
 router = APIRouter(prefix=TAGS, tags=["tags"])
 
 
-@router.post("/", response_model=TagInfo, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    description=f"This endpoint is used to create new tag. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=TagInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_tag(
     tag_in: TagIn,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -45,7 +59,16 @@ async def create_tag(
     return TagInfo(tag=TagOut.model_validate(tag), detail=TAG_CREATED)
 
 
-@router.get("/", response_model=list[TagOut])
+@router.get(
+    "/",
+    description=f"This endpoint is used to get all tags. {RATE_LIMITER_INFO}",
+    dependencies=[
+        Depends(
+            RateLimiter(times=REQUEST_AMOUNT_LIMIT, seconds=RATE_LIMIT_TIME_IN_SECONDS)
+        )
+    ],
+    response_model=list[TagOut],
+)
 async def get_tags(
     current_user: UserDb = Depends(auth_service.get_current_user),
     tag_repo: AbstractTagRepo = Depends(get_tag_repository),
@@ -75,7 +98,11 @@ async def get_tags(
     return [TagOut.model_validate(tag) for tag in tags]
 
 
-@router.get("/{tag_id}", response_model=TagOut)
+@router.get(
+    "/{tag_id}",
+    description=f"This endpoint is used to get tag by id.",
+    response_model=TagOut,
+)
 async def get_tag_by_id(
     tag_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
@@ -96,7 +123,11 @@ async def get_tag_by_id(
     return TagOut.model_validate(tag)
 
 
-@router.put("/{tag_id}", response_model=TagInfo)
+@router.put(
+    "/{tag_id}",
+    description="This endpoint is used to update tag by id.",
+    response_model=TagInfo,
+)
 async def update_tag(
     tag_id: int,
     tag_in: TagIn,
@@ -123,7 +154,11 @@ async def update_tag(
     return TagInfo(tag=TagOut.model_validate(tag), detail=TAG_UPDATED)
 
 
-@router.delete("/{tag_id}", response_model=TagInfo)
+@router.delete(
+    "/{tag_id}",
+    description="This endpoint is used to delete tag by id.",
+    response_model=TagInfo,
+)
 async def delete_tag(
     tag_id: int,
     current_user: UserDb = Depends(auth_service.get_current_user),
