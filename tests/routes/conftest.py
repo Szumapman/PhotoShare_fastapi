@@ -1,10 +1,12 @@
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from fastapi import File
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from fastapi_limiter.depends import RateLimiter
 
-from main import app
+from main import app, lifespan
 from src.database.models import Base, User, Photo, Rating, Comment, Tag
 from src.database.dependencies import (
     get_user_repository,
@@ -58,7 +60,6 @@ def session():
 
 @pytest.fixture(scope="module")
 def client_app(session):
-
     def override_get_user_repository():
         try:
             yield PostgresUserRepo(session)
@@ -92,6 +93,9 @@ def client_app(session):
     def override_get_photo_storage_provider():
         return MockCloudinaryPhotoStorageProvider()
 
+    def override_RateLimiter():
+        return None
+
     app.dependency_overrides = {
         get_user_repository: override_get_user_repository,
         get_avatar_provider: override_get_avatar_provider,
@@ -99,9 +103,11 @@ def client_app(session):
         get_comment_repository: override_get_comment_repository,
         get_tag_repository: override_get_tag_repository,
         get_photo_storage_provider: override_get_photo_storage_provider,
+        RateLimiter: override_RateLimiter,
     }
 
-    yield TestClient(app)
+    with TestClient(app) as client:
+        yield client
 
 
 @pytest.fixture(scope="function")
