@@ -1,6 +1,9 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
+from fastapi_limiter import FastAPILimiter
+from redis.asyncio import Redis
 
+from src.conf.config import settings
 from src.routes import auth, users, photos, comments, tags
 from src.conf.constant import API
 from src.conf.errors import (
@@ -19,6 +22,26 @@ app.include_router(users.router, prefix=API)
 app.include_router(photos.router, prefix=API)
 app.include_router(comments.router, prefix=API)
 app.include_router(tags.router, prefix=API)
+
+
+async def startup_event():
+    """
+    Initialize FastAPI Limiter, to prevent abuse and ensure fair usage of the API.
+    """
+    redis_connection = await Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password,
+        db=0,
+        encoding="utf-8",
+        decode_responses=True,
+    )
+    await FastAPILimiter.init(
+        redis_connection,
+    )
+
+
+app.add_event_handler("startup", startup_event)
 
 
 @app.exception_handler(NotFoundError)

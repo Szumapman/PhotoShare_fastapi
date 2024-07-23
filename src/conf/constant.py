@@ -106,3 +106,7 @@ TAG_ALREADY_EXISTS = "Tag already exists"
 TAG_UPDATED = "Tag updated"
 TAG_DELETED = "Tag deleted"
 TAGS_GET_ENUM = ["asc", "desc"]
+
+REQUEST_AMOUNT_LIMIT = 100
+RATE_LIMIT_TIME_IN_SECONDS = 60
+RATE_LIMITER_INFO = f"It is rate limited to {REQUEST_AMOUNT_LIMIT} requests per {RATE_LIMIT_TIME_IN_SECONDS} seconds."
