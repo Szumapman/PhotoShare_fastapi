@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi_limiter import FastAPILimiter
@@ -15,18 +17,10 @@ from src.conf.errors import (
 )
 
 
-app = FastAPI()
-
-app.include_router(auth.router, prefix=API)
-app.include_router(users.router, prefix=API)
-app.include_router(photos.router, prefix=API)
-app.include_router(comments.router, prefix=API)
-app.include_router(tags.router, prefix=API)
-
-
-async def startup_event():
+@asynccontextmanager
+async def lifespan(_: FastAPI):
     """
-    Initialize FastAPI Limiter, to prevent abuse and ensure fair usage of the API.
+    Initialize FastAPI Limiter on app startup, to prevent abuse and ensure fair usage of the API.
     """
     redis_connection = await Redis(
         host=settings.redis_host,
@@ -39,9 +33,17 @@ async def startup_event():
     await FastAPILimiter.init(
         redis_connection,
     )
+    yield
+    await FastAPILimiter.close()
 
 
-app.add_event_handler("startup", startup_event)
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth.router, prefix=API)
+app.include_router(users.router, prefix=API)
+app.include_router(photos.router, prefix=API)
+app.include_router(comments.router, prefix=API)
+app.include_router(tags.router, prefix=API)
 
 
 @app.exception_handler(NotFoundError)
