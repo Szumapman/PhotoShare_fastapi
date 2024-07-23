@@ -17,14 +17,6 @@ from src.conf.constant import (
     FORBIDDEN_FOR_USER,
     FORBIDDEN_FOR_USER_AND_MODERATOR,
 )
-from tests.routes.conftest import (
-    EMAIL_STANDARD,
-    PHOTO_URL,
-    EMAIL_ADMIN,
-    EMAIL_MODERATOR,
-    TRANSFORM_PHOTO_URL,
-    TRANSFORM_PARAMS,
-)
 
 
 def test_create_tag_success(client_app, tag_in_json, access_token_user_standard):
