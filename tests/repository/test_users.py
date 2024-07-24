@@ -109,17 +109,18 @@ class TestUsers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(e.exception.detail, USER_NOT_FOUND)
 
     async def test_get_users_success(self):
-        self.db.query().all.return_value = [
+        self.db.query().offset.return_value.limit.return_value.all.return_value = [
             self.user_admin,
             self.user_moderator,
             self.user_standard,
         ]
-        result = await self.user_repo.get_users()
+        result = await self.user_repo.get_users(0, 10)
+        print(result)
         self.assertEqual(
             result, [self.user_admin, self.user_moderator, self.user_standard]
         )
-        self.db.query().all.return_value = []
-        result = await self.user_repo.get_users()
+        self.db.query().offset.return_value.limit.return_value.all.return_value = []
+        result = await self.user_repo.get_users(0, 10)
         self.assertEqual(result, [])
 
     async def test_create_user_success(self):

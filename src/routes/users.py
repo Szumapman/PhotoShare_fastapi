@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
-from fastapi_limiter.depends import RateLimiter
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Query
 
 from src.services.auth import auth_service
 from src.database.dependencies import (
@@ -47,12 +46,19 @@ router = APIRouter(prefix=USERS, tags=["users"])
     response_model=list[UserDb] | list[UserModeratorView] | list[UserPublic],
 )
 async def get_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
     current_user: User = Depends(auth_service.get_current_user),
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
     """
-    This endpoint is used to get all users. Depending on the user role, the endpoint will return different data views.
+    This endpoint is used to get all users with pagination.
+    Depending on the user role, the endpoint will return different data views.
 
+    :param skip: number of users to skip
+    :type skip: int
+    :param limit: number of users to return
+    :type limit: int
     :param current_user: user who performed request
     :type current_user: User
     :param user_repo: repository to work with
@@ -62,7 +68,7 @@ async def get_users(
             list[UserModeratorView] if current_user role is moderator |
             list[UserPublic] if current_user role is standard
     """
-    users = await user_repo.get_users()
+    users = await user_repo.get_users(skip, limit)
     if current_user.role == ROLE_ADMIN:
         return [UserDb.model_validate(user) for user in users]
     elif current_user.role == ROLE_MODERATOR:

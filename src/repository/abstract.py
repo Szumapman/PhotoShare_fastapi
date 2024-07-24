@@ -49,10 +49,14 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_users(self) -> list[Type[User]]:
+    async def get_users(self, skip: int, limit: int) -> list[Type[User]]:
         """
         Returns users from database
 
+        :param skip: number of users to skip
+        :type skip: int
+        :param limit: number of users to return
+        :type limit: int
         :return: list of users
         :rtype: list[User]
         """

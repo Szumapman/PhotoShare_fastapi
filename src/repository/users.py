@@ -68,14 +68,18 @@ class PostgresUserRepo(AbstractUserRepo):
             raise NotFoundError(detail=USER_NOT_FOUND)
         return user
 
-    async def get_users(self) -> list[Type[User]]:
+    async def get_users(self, skip, limit) -> list[Type[User]]:
         """
         Returns users from database
 
+        :param skip: number of users to skip
+        :type skip: int
+        :param limit: number of users to return
+        :type limit: int
         :return: list of users
         :rtype: list[User]
         """
-        return self.db.query(User).all()
+        return self.db.query(User).offset(skip).limit(limit).all()
 
     async def create_user(self, user: UserIn, avatar: str) -> User:
         """
