@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.repository.users import PostgresUserRepo
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.conf.constant import (
+from src.conf.constants import (
     ROLE_ADMIN,
     ROLE_STANDARD,
     ROLE_MODERATOR,

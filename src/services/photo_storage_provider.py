@@ -7,7 +7,7 @@ from fastapi import File
 from src.services.abstract import AbstractPhotoStorageProvider
 from src.schemas.photos import PhotoOut, TransformIn
 from src.conf.config import settings
-from src.conf.constant import (
+from src.conf.constants import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
     CLOUDINARY_AVATAR_PUBLIC_ID_PREFIX,
     AVATAR_WIDTH,

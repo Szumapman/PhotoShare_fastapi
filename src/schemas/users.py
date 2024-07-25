@@ -4,7 +4,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
-from src.conf.constant import (
+from src.conf.constants import (
     MAX_USERNAME_LENGTH,
     ROLE_ADMIN,
     ROLE_MODERATOR,

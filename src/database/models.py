@@ -14,7 +14,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql.sqltypes import DateTime
 from sqlalchemy.orm import relationship, declarative_base
 
-from src.conf.constant import (
+from src.conf.constants import (
     MAX_TAG_NAME_LENGTH,
     MAX_COMMENT_LENGTH,
     MAX_USERNAME_LENGTH,

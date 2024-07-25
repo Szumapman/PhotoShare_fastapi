@@ -2,7 +2,7 @@ from typing import Type
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from src.conf.constant import (
+from src.conf.constants import (
     PHOTO_NOT_FOUND,
     USER_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,

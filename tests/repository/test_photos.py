@@ -9,7 +9,7 @@ from src.database.models import Tag, User, Photo, Rating
 from src.schemas.photos import PhotoIn, RatingIn
 from src.schemas.tags import TagIn
 from src.repository.photos import PostgresPhotoRepo
-from src.conf.constant import (
+from src.conf.constants import (
     ROLE_STANDARD,
     PHOTO_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER_AND_MODERATOR,

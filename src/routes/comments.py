@@ -5,7 +5,7 @@ from src.conf.errors import ForbiddenError
 from src.database.dependencies import get_comment_repository, get_photo_repository
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractCommentRepo, AbstractPhotoRepo
-from src.conf.constant import (
+from src.conf.constants import (
     COMMENTS,
     COMMENT_CREATED,
     COMMENT_UPDATED,

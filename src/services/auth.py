@@ -10,7 +10,7 @@ from redis.asyncio import Redis
 
 from src.conf.config import settings
 from src.conf.errors import UnauthorizedError, ForbiddenError
-from src.conf.constant import (
+from src.conf.constants import (
     AUTH,
     API,
     REDIS_EXPIRE,

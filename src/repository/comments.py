@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from src.conf.constant import (
+from src.conf.constants import (
     COMMENT_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER,
 )

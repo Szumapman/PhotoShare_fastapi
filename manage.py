@@ -11,7 +11,7 @@ from validator_collection import validators
 from src.database.db import SessionLocal
 from src.database.dependencies import get_avatar_provider, get_password_handler
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.conf.constant import MAX_USERNAME_LENGTH, ROLE_ADMIN
+from src.conf.constants import MAX_USERNAME_LENGTH, ROLE_ADMIN
 
 
 class UserNameValidator(Validator):

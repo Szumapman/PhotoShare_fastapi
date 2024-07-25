@@ -7,7 +7,7 @@ from src.schemas.tags import TagIn
 from src.services.auth import auth_service
 from src.database.models import User, Photo, Rating
 
-from src.conf.constant import (
+from src.conf.constants import (
     API,
     ROLE_ADMIN,
     ROLE_MODERATOR,
@@ -32,7 +32,7 @@ from tests.routes.conftest import (
     TRANSFORM_PHOTO_URL,
     TRANSFORM_PARAMS,
 )
-from src.conf.constant import PHOTOS
+from src.conf.constants import PHOTOS
 from src.schemas.photos import PhotoIn
 
 

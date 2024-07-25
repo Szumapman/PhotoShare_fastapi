@@ -3,7 +3,7 @@ from unittest.mock import patch
 from fastapi import status
 
 from src.database.models import Photo, Comment
-from src.conf.constant import (
+from src.conf.constants import (
     API,
     COMMENTS,
     COMMENT_CREATED,

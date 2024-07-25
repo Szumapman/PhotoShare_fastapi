@@ -3,7 +3,7 @@ import json
 
 from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 
-from src.conf.constant import (
+from src.conf.constants import (
     MAX_DESCRIPTION_LENGTH,
     MAX_TAGS_AMOUNT,
 )

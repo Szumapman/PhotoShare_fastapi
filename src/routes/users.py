@@ -6,7 +6,7 @@ from src.database.dependencies import (
     get_password_handler,
     get_photo_storage_provider,
 )
-from src.conf.constant import (
+from src.conf.constants import (
     USERS,
     ROLE_ADMIN,
     ROLE_MODERATOR,
