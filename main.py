@@ -82,4 +82,4 @@ async def photo_storage_provider_exception_handler(request, exc):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run("main:app", reload=True)
