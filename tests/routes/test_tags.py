@@ -5,7 +5,7 @@ from fastapi import status
 from src.services.auth import auth_service
 from src.database.models import Tag
 
-from src.conf.constant import (
+from src.conf.constants import (
     API,
     TAGS,
     TAG_CREATED,

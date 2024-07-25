@@ -14,7 +14,7 @@ from src.database.dependencies import (
 from src.services.auth import auth_service
 from src.services.abstract import AbstractPasswordHandler
 from src.services.avatar import AbstractAvatarProvider
-from src.conf.constant import (
+from src.conf.constants import (
     AUTH,
     USER_LOGOUT,
     USER_CREATED,

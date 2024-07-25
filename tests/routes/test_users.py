@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from fastapi import status
 
-from src.conf.constant import (
+from src.conf.constants import (
     USER_CREATED,
     API,
     USERS,

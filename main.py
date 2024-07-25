@@ -8,7 +8,7 @@ from redis.asyncio import Redis
 
 from src.conf.config import settings
 from src.routes import auth, users, photos, comments, tags
-from src.conf.constant import API
+from src.conf.constants import API
 from src.conf.errors import (
     NotFoundError,
     ForbiddenError,

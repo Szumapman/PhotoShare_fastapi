@@ -7,7 +7,7 @@ from sqlalchemy import and_
 from src.repository.abstract import AbstractUserRepo
 from src.schemas.users import UserIn, ActiveStatus, UserRoleIn
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.conf.constant import (
+from src.conf.constants import (
     TOKEN_NOT_FOUND,
     ACCESS_TOKEN_EXPIRE,
     USER_NOT_FOUND,

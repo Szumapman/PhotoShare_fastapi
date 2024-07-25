@@ -2,7 +2,7 @@ import re
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
-from src.conf.constant import MAX_TAG_NAME_LENGTH
+from src.conf.constants import MAX_TAG_NAME_LENGTH
 
 
 class TagIn(BaseModel):

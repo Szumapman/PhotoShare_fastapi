@@ -7,7 +7,7 @@ from src.schemas.tags import TagIn, TagInfo, TagOut
 from src.schemas.users import UserDb
 from src.services.auth import auth_service
 from src.repository.abstract import AbstractTagRepo
-from src.conf.constant import (
+from src.conf.constants import (
     TAGS,
     TAG_CREATED,
     TAG_ALREADY_EXISTS,

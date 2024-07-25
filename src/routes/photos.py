@@ -29,7 +29,7 @@ from src.database.dependencies import (
     get_photo_storage_provider,
     get_qr_code_provider,
 )
-from src.conf.constant import (
+from src.conf.constants import (
     PHOTOS,
     PHOTO_SEARCH_ENUMS,
     FORBIDDEN_FOR_NOT_OWNER,

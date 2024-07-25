@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
-from src.conf.constant import MAX_COMMENT_LENGTH
+from src.conf.constants import MAX_COMMENT_LENGTH
 
 
 class CommentUpdate(BaseModel):

@@ -23,7 +23,7 @@ from src.repository.photos import PostgresPhotoRepo
 from src.schemas.photos import TransformIn
 from src.services.abstract import AbstractPhotoStorageProvider
 from src.services.avatar import AvatarProviderGravatar
-from src.conf.constant import ROLE_ADMIN, ROLE_MODERATOR, API, AUTH
+from src.conf.constants import ROLE_ADMIN, ROLE_MODERATOR, API, AUTH
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./tests/test.db"

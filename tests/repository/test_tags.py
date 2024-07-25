@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.repository.tags import PostgresTagRepo
 from src.database.models import Tag
 from src.schemas.tags import TagIn
-from src.conf.constant import TAGS_GET_ENUM, TAG_NOT_FOUND, TAG_ALREADY_EXISTS
+from src.conf.constants import TAGS_GET_ENUM, TAG_NOT_FOUND, TAG_ALREADY_EXISTS
 from src.conf.errors import NotFoundError, ConflictError
 
 

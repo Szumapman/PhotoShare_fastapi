@@ -2,7 +2,7 @@ from typing import Type
 
 from sqlalchemy.orm import Session
 
-from src.conf.constant import TAG_NOT_FOUND, TAG_ALREADY_EXISTS
+from src.conf.constants import TAG_NOT_FOUND, TAG_ALREADY_EXISTS
 from src.conf.errors import NotFoundError, ConflictError
 from src.repository.abstract import AbstractTagRepo
 from src.database.models import Tag
