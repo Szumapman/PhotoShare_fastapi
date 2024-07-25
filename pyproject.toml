@@ -27,6 +27,7 @@ fastapi-limiter = "^0.1.6"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
+sphinx = "^7.4.7"
 
 
 [tool.poetry.group.test.dependencies]
