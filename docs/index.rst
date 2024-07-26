@@ -15,62 +15,6 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-PhotoShare_fastapi main
-===================
-.. automodule:: main
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi conf config
-===================
-.. automodule:: src.conf.config
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi conf constants
-===================
-.. automodule:: src.conf.constants
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi conf errors
-===================
-.. automodule:: src.conf.errors
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi conf logger
-===================
-.. automodule:: src.conf.logger
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi database db
-===================
-.. automodule:: src.database.db
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi database dependencies
-===================
-.. automodule:: src.database.dependencies
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-PhotoShare_fastapi database models
-===================
-.. automodule:: src.database.models
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
 PhotoShare_fastapi repository abstract
 ===================
 .. automodule:: src.repository.abstract
@@ -207,6 +151,62 @@ PhotoShare_fastapi services photo_storage_provider
 PhotoShare_fastapi services qr_code
 ===================
 .. automodule:: src.services.qr_code
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi database db
+===================
+.. automodule:: src.database.db
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi database dependencies
+===================
+.. automodule:: src.database.dependencies
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi database models
+===================
+.. automodule:: src.database.models
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi conf config
+===================
+.. automodule:: src.conf.config
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi conf constants
+===================
+.. automodule:: src.conf.constants
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi conf errors
+===================
+.. automodule:: src.conf.errors
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi conf logger
+===================
+.. automodule:: src.conf.logger
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi main
+===================
+.. automodule:: main
   :members:
   :undoc-members:
   :show-inheritance:
