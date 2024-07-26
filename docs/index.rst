@@ -109,14 +109,14 @@ PhotoShare_fastapi schemas users
   :show-inheritance:
 
 PhotoShare_fastapi services abstract
-====================================
+=====================================
 .. automodule:: src.services.abstract
   :members:
   :undoc-members:
   :show-inheritance:
 
 PhotoShare_fastapi services auth
-================================
+=================================
 .. automodule:: src.services.auth
   :members:
   :undoc-members:
@@ -137,7 +137,7 @@ PhotoShare_fastapi services password
   :show-inheritance:
 
 PhotoShare_fastapi services photo_storage_provider
-===================================================
+====================================================
 .. automodule:: src.services.photo_storage_provider
   :members:
   :undoc-members:
@@ -167,6 +167,13 @@ PhotoShare_fastapi database dependencies
 PhotoShare_fastapi database models
 ===================================
 .. automodule:: src.database.models
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+PhotoShare_fastapi conf config
+==============================
+.. automodule:: src.conf.config
   :members:
   :undoc-members:
   :show-inheritance:
