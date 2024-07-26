@@ -171,13 +171,6 @@ PhotoShare_fastapi database models
   :undoc-members:
   :show-inheritance:
 
-PhotoShare_fastapi conf config
-==============================
-.. automodule:: src.conf.config
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
 PhotoShare_fastapi conf constants
 =================================
 .. automodule:: src.conf.constants
