@@ -1,11 +1,9 @@
-from io import BytesIO
-
 import cloudinary
 import cloudinary.uploader
 from fastapi import File
 
 from src.services.abstract import AbstractPhotoStorageProvider
-from src.schemas.photos import PhotoOut, TransformIn
+from src.schemas.photos import TransformIn
 from src.conf.config import settings
 from src.conf.constants import (
     CLOUDINARY_PHOTO_PUBLIC_ID_PREFIX,
@@ -23,6 +21,9 @@ class CloudinaryPhotoStorageProvider(AbstractPhotoStorageProvider):
     """
 
     def __init__(self):
+        """
+        Constructor for the CloudinaryPhotoStorageProvider class.
+        """
         self.config = cloudinary.config(
             cloud_name=settings.cloudinary_name,
             api_key=settings.cloudinary_api_key,
