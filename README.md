@@ -17,6 +17,7 @@ PhotoShare FastAPI is a comprehensive REST API application that facilitates user
 
 I have created the project as a solution to the final assignment for one of the stages of the `Python Developer` course organized by [GoIT Polska](https://www.goit.global/pl).
 
+### Links to test instance and documentation
 > [!CAUTION]
 > This is a test instance, which can be turned off or moved to another address at any time, and all data can be deleted. Don't give any true personal information there, or post relevant and/or private photos or images. Current addresses of the test instance and documentation will be published here.
 #### Here you can test the app in action (using [Swagger](https://swagger.io/) or [ReDoc](https://redocly.github.io/redoc/)):
@@ -27,7 +28,7 @@ I have created the project as a solution to the final assignment for one of the 
 * [PhotoShare-fastapi-doc](https://photoshare-fastapi-docs.tiiny.site/)
 
 
-#### Some of the technologies used to create the app:
+### Some of the technologies used to create the app:
 - [Python](https://www.python.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [SQLAlchemy](https://www.sqlalchemy.org/)
