@@ -8,7 +8,6 @@
 import sys
 import os
 
-
 sys.path.append(os.path.abspath(".."))
 
 project = "PhotoShare_fastapi"
@@ -18,7 +17,7 @@ author = "Paweł Szumański"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode"]
+extensions = ["sphinx.ext.todo", "sphinx.ext.viewcode", "sphinx.ext.autodoc"]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
