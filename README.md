@@ -19,7 +19,7 @@ I have created the project as a solution to the final assignment for one of the 
 
 ### Links to test instance and documentation
 > [!CAUTION]
-> This is a test instance, which can be turned off or moved to another address at any time, and all data can be deleted. Don't give any true personal information there, or post relevant and/or private photos or images. Current addresses of the test instance and documentation will be published here.
+> This is a test instance, which can be turned off or moved to another address at any time, and all data can be deleted. Don't give any true personal information there, or upload relevant and/or private photos or images. Current addresses of the test instance and documentation will be published here.
 #### Here you can test the app in action (using [Swagger](https://swagger.io/) or [ReDoc](https://redocly.github.io/redoc/)):
 * [PhotoShare-fastapi-Swagger](https://divine-shaun-goit-project-3160ff2e.koyeb.app/docs#/)
 * [PhotoShare-fastapi-ReDoc](https://divine-shaun-goit-project-3160ff2e.koyeb.app/redoc)
