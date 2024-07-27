@@ -1,8 +1,9 @@
-from fastapi_limiter.depends import RateLimiter
-
 """
 Set of constants used in the project.
 """
+
+from fastapi_limiter.depends import RateLimiter
+
 
 MAX_DESCRIPTION_LENGTH = 1000
 MAX_TAG_NAME_LENGTH = 50

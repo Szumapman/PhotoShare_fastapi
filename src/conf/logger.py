@@ -1,8 +1,9 @@
-import logging
-
 """
 Logging configuration for the app.
 """
+
+import logging
+
 
 logger = logging.getLogger("PhotoShare_fastapi")
 logger.setLevel(logging.DEBUG)

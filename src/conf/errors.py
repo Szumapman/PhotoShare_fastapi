@@ -1,8 +1,3 @@
-from fastapi import HTTPException, status
-
-# from main import app
-
-
 class PhotoStorageProviderError(Exception):
     """
     Base class for errors related to photo storage providers.

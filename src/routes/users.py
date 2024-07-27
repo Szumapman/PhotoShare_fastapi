@@ -52,8 +52,7 @@ async def get_users(
     user_repo: AbstractUserRepo = Depends(get_user_repository),
 ):
     """
-    This endpoint is used to get all users with pagination.
-    Depending on the user role, the endpoint will return different data views.
+    This endpoint is used to get all users with pagination. Depending on the user role, the endpoint will return different data views.
 
     :param skip: number of users to skip
     :type skip: int

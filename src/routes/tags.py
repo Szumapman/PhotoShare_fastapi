@@ -39,6 +39,7 @@ async def create_tag(
 ):
     """
     Create a new tag.
+
     :param tag_in: tag name
     :type tag_in: TagIn
     :param current_user: user who created tag
@@ -73,6 +74,7 @@ async def get_tags(
 ):
     """
     Get all tags.
+
     :param current_user: user who performed request
     :type current_user: UserDb
     :param tag_repo: repository for tags
@@ -101,6 +103,7 @@ async def get_tag_by_id(
 ):
     """
     Get tag by id.
+
     :param tag_id: id of tag to get
     :type tag_id: int
     :param current_user: user who performed request

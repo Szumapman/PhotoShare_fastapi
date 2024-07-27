@@ -37,6 +37,7 @@ async def create_comment(
 ):
     """
     Create a new comment.
+
     :param comment: comment data including content and photo_id
     :type comment: CommentIn
     :param current_user: user who created comment

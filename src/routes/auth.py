@@ -1,3 +1,7 @@
+"""
+Authentication routes
+"""
+
 from fastapi import APIRouter, HTTPException, status, Security, Depends
 from fastapi.security import (
     OAuth2PasswordRequestForm,
@@ -35,6 +39,7 @@ security = HTTPBearer()
 async def __set_tokens(user: User, user_repo: AbstractUserRepo) -> TokenModel:
     """
     This helping function is used to create access and refresh tokens for a user.
+
     :param user: user to create tokens for
     :type user: User
     :param user_repo: repository to work with

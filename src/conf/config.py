@@ -1,3 +1,7 @@
+"""
+Set the configuration settings for the app.
+"""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,25 +9,36 @@ class Settings(BaseSettings):
     """
     Configuration settings.
 
-    Attributes:
-        postgres_db (str): PostgreSQL database name.
-        postgres_user (str): PostgreSQL username.
-        postgres_password (str): PostgreSQL password.
-        postgres_host (str, optional): PostgreSQL host (default is "localhost").
-        postgres_port (int): PostgreSQL port.
-        sqlalchemy_database_url (str): SQLAlchemy database URL.
-        secret_key (str): Secret key for
-        algorithm (str): Algorithm for token generation (e.g., "HS256").
-        redis_host (str, optional): Redis server hostname (default is "localhost").
-        redis_port (int, optional): Redis server port (default is 6379).
-        redis_password (str): Redis server password (default is "password").
-        cloudinary_name (str): Cloudinary account name.
-        cloudinary_api_key (str): Cloudinary API key.
-        cloudinary_api_secret (str): Cloudinary API secret.
-
-    Config:
-            env_file (str): Path to the environment file (default is ".env").
-            env_file_encoding (str): Encoding of the environment file (default is "utf-8").
+    :param postgres_db: PostgreSQL database name.
+    :type postgres_db: str
+    :param postgres_user: PostgreSQL username.
+    :type postgres_user: str
+    :param postgres_password: PostgreSQL password.
+    :type postgres_password: str
+    :param postgres_host: PostgreSQL host.
+    :type postgres_host: str
+    :param postgres_port: PostgreSQL port.
+    :type postgres_port: int
+    :param sqlalchemy_database_url: SQLAlchemy database URL.
+    :type sqlalchemy_database_url: str
+    :param secret_key: Secret key for
+    :type secret_key: str
+    :param algorithm: Algorithm for token generation (e.g., "HS256").
+    :type algorithm: str
+    :param redis_host: Redis server hostname.
+    :type redis_host: str
+    :param redis_port: Redis server port.
+    :type redis_port: int
+    :param redis_password: Redis server password.
+    :type redis_password: str
+    :param cloudinary_name: Cloudinary account name.
+    :type cloudinary_name: str
+    :param cloudinary_api_key: Cloudinary API key.
+    :type cloudinary_api_key: str
+    :param cloudinary_api_secret: Cloudinary API secret.
+    :type cloudinary_api_secret: str
+    :var model_config: Configuration settings for pydantic-settings.
+    :type model_config: SettingsConfigDict
     """
 
     postgres_db: str

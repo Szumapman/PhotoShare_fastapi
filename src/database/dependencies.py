@@ -1,3 +1,7 @@
+"""
+This module contains all the dependencies for the application.
+"""
+
 from src.database.db import get_db
 from src.repository.abstract import (
     AbstractUserRepo,
