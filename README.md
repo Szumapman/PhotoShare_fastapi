@@ -1,7 +1,7 @@
 # PhotoShare FastAPI
 ### Table of Contents
 - [Introduction](#introduction)
-  - [Links to test instance and documentation](#https://github.com/Szumapman/PhotoShare_fastapi/blob/main/README.md#links-to-test-instance-and-documentation)
+  - [Links to test instance and documentation](#links-to-test-instance-and-documentation)
   - [Technologies](#)
 - [Some features](#features)
 - [Installation and launch](#)
