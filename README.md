@@ -216,6 +216,7 @@ CLOUDINARY_API_KEY=<CLOUDINARY_API_KEY>
 CLOUDINARY_API_SECRET=<CLOUDINARY_API_SECRET>
 ```
 You will need the database and Redis instances running on the servers of your choice.
+
 3. Create the database tables by applying the migrations:
 ```
 alembic upgrade head
