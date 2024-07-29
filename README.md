@@ -8,6 +8,8 @@
   - [Prerequisites](#prerequisites)
   - [Install and run locally](#install-and-run-locally)
   - [Install and run on server](#install-and-run-on-server)
+  - [Management and maintenance](#management-and-maintenance)
+  - [Tests](#tests)
 - [License](#license)
 - [Contributing](#contributing)
 - [Contact](#contact)
@@ -226,6 +228,28 @@ alembic upgrade head
 docker build -t your_image_name .
 ```
 5. Deploy the app to the server, I'm recommending using the docker image created in the previous step.
+
+
+### Management and maintenance
+To create an account with administrator privileges, use the command:
+```
+python manage.py create_admin
+```
+Then add the necessary data.
+
+To purge the database of redundant entries of tokens that are no longer valid, you can use the following commands:
+```
+python manage.py clean_access_token
+```
+```
+python manage.py clean_refresh_tokens
+```
+
+### Tests
+To run all the tests written for the application, in the root directory use the command: 
+```
+pytest .\tests\
+```
 
 
 ## License
