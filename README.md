@@ -86,6 +86,7 @@ Then go to the project directory:
 cd PhotoShare_fastapi
 ```
 2. Create a virtual environment and install the dependencies:
+
 Using Poetry:
 start the virtual environment:
 ```
@@ -100,7 +101,9 @@ or you can install all dependencies (including test and dev) with:
 poetry install --with test,dev
 ```
 Alternatively, you can use pip:
-start the virtual environment and activate it (optional but recommended):
+
+Start the virtual environment and activate it (optional but recommended):
+
 (depending on your OS you may need to slightly change the command f.e. change python to python3 or properly activate virtual
 environment):
 ```
@@ -141,7 +144,7 @@ CLOUDINARY_API_SECRET=<CLOUDINARY_API_SECRET>
 ```
 You can copy the [env.example](env.example) file rename it to .env and change the variables to your own. 
 
-Here is an example of the.env file to use with PostgreSQL and Redis running in containers (you have to add yours cloudinary credentials and you should at least
+Here is an example of the.env file to use with PostgreSQL and Redis running in containers (you have to add yours [cloudinary](https://cloudinary.com/) credentials and you should at least
 change the secret key and passwords):
 ```
 # PostgreSQL 
@@ -217,7 +220,7 @@ CLOUDINARY_NAME=<CLOUDINARY_USER_NAME>
 CLOUDINARY_API_KEY=<CLOUDINARY_API_KEY>
 CLOUDINARY_API_SECRET=<CLOUDINARY_API_SECRET>
 ```
-You will need the database and Redis instances running on the servers of your choice.
+You will need the database and Redis instances running on the servers of your choice and [cloudinary](https://cloudinary.com/) account.
 
 3. Create the database tables by applying the migrations:
 ```
