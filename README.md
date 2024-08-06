@@ -108,7 +108,7 @@ Start the virtual environment and activate it (optional but recommended):
 environment):
 ```
 python -m venv venv
-source venv/bin/activate
+.venv/bin/activate
 ```
 install dependencies:
 ```
