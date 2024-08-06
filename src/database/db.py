@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.conf.config import settings
+from src.conf.logger import logger
 
 SQLALCHEMY_DATABASE_URL = settings.sqlalchemy_database_url
 
@@ -26,7 +27,7 @@ def get_db():
     try:
         yield db
     except Exception as e:
-        print(e)
+        logger.exception(e)
         db.rollback()
     finally:
         db.close()
