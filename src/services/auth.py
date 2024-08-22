@@ -32,20 +32,20 @@ class Auth:
     """
     This class is used to authenticate users. It uses OAuth2PasswordBearer and JWT to authenticate users.
 
-    :param secret_key: secret key used to sign JWT
-    :type secret_key: str
-    :param algorithm: algorithm used to encrypt JWT
-    :type algorithm: str
+    :param SECRET_KEY: secret key used to sign JWT
+    :type SECRET_KEY: str
+    :param ALGORITHM: algorithm used to encrypt JWT
+    :type ALGORITHM: str
     :param oauth2_scheme: OAuth2PasswordBearer scheme
     :type oauth2_scheme: OAuth2PasswordBearer
-    :param r: Redis client
-    :type r: Redis
+    :param redis_connection: Redis client
+    :type redis_connection: Redis
     """
 
     SECRET_KEY = settings.secret_key
     ALGORITHM = settings.algorithm
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{API}{AUTH}/login")
-    r = Redis(
+    redis_connection = Redis(
         host=settings.redis_host,
         port=settings.redis_port,
         password=settings.redis_password,
@@ -62,8 +62,8 @@ class Auth:
         :type user: User
         :return: None
         """
-        await self.r.set(f"user:{email}", pickle.dumps(user))
-        await self.r.expire(f"user:{email}", REDIS_EXPIRE)
+        await self.redis_connection.set(f"user:{email}", pickle.dumps(user))
+        await self.redis_connection.expire(f"user:{email}", REDIS_EXPIRE)
 
     async def create_access_token(
         self,
@@ -169,7 +169,7 @@ class Auth:
                 raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
         except JWTError:
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
-        user = await self.r.get(f"user:{email}")
+        user = await self.redis_connection.get(f"user:{email}")
         if user is None:
             user = await user_repo.get_user_by_email(email)
             if user is None:
@@ -217,7 +217,7 @@ class Auth:
         :type email: str
         :return: None
         """
-        await self.r.delete(f"user:{email}")
+        await self.redis_connection.delete(f"user:{email}")
 
 
 auth_service = Auth()
