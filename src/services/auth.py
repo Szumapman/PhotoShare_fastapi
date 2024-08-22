@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
-from jose import jwt, JWTError
+import jwt
 from redis.asyncio import Redis
 
 
@@ -139,7 +139,7 @@ class Auth:
                 email = payload["sub"]
                 return email
             raise UnauthorizedError(detail=INVALID_SCOPE)
-        except JWTError:
+        except jwt.exceptions.PyJWTError:  # JWTError:
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
 
     async def get_current_user(
@@ -167,7 +167,7 @@ class Auth:
                     raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
             else:
                 raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
-        except JWTError:
+        except jwt.exceptions.PyJWTError:  # JWTError:
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
         user = await self.redis_connection.get(f"user:{email}")
         if user is None:
@@ -206,7 +206,7 @@ class Auth:
                     raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
                 return session_id
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
-        except JWTError:
+        except jwt.exceptions.PyJWTError:  # JWTError:
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
 
     async def delete_user_from_redis(self, email: str):
