@@ -37,7 +37,7 @@ from src.schemas.photos import PhotoIn
 
 
 def test_create_photo_success(client_app, photo_in_json, access_token_user_standard):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         photo_in_data = PhotoIn(**photo_in_json)
         with open("tests/static/test.jpg", "rb") as file:
@@ -61,7 +61,7 @@ def test_get_photo_success(session, client_app, photo, access_token_user_standar
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/{photo.id}",
@@ -74,7 +74,7 @@ def test_get_photo_success(session, client_app, photo, access_token_user_standar
 
 
 def test_get_photo_fail(session, client_app, access_token_user_standard):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/-1",
@@ -91,7 +91,7 @@ def test_delete_photo_success(session, client_app, photo, access_token_user_stan
     photo.user_id = user.id
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/{photo.id}",
@@ -113,7 +113,7 @@ def test_delete_photo_by_admin_success(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/{photo.id}",
@@ -134,7 +134,7 @@ def test_delete_fail_wrong_user_id(
     session.add(photo)
     session.commit()
     session.refresh(photo)
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/{photo.id}",
@@ -155,7 +155,7 @@ def test_delete_by_moderator_fail(
     photo.user_id = 999
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/{photo.id}",
@@ -178,7 +178,7 @@ def test_update_photo_success(
         TagIn(name="new tag1 test"),
         TagIn(name="new tag2 test"),
     ]
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{PHOTOS}/{photo.id}",
@@ -207,7 +207,7 @@ def test_update_photo_fail_wrong_photo_id(
         TagIn(name="new tag1 test"),
         TagIn(name="new tag2 test"),
     ]
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{PHOTOS}/-1",
@@ -235,7 +235,7 @@ def test_update_photo_fail_not_owner(
     session.add(photo)
     session.commit()
     session.refresh(photo)
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{PHOTOS}/{photo.id}",
@@ -254,7 +254,7 @@ def test_get_photos_all_no_query_success(
     session.add(photo)
     session.add(photo_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}",
@@ -275,7 +275,7 @@ def test_get_photos_all_with_query_success(
     session.add(photo)
     session.add(photo_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?query=test",
@@ -296,7 +296,7 @@ def test_get_photos_all_with_user_id_success(
     session.add(photo)
     session.add(photo_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?user_id=1",
@@ -317,7 +317,7 @@ def test_get_photos_all_with_user_id_and_query_success(
     session.add(photo)
     session.add(photo_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?user_id=1&query=test",
@@ -343,7 +343,7 @@ def test_get_photos_all_with_sort_by_success(
     sleep(1)
     session.add(photo_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?sort_by=upload_date-desc",
@@ -391,7 +391,7 @@ def test_get_photos_wrong_user_id_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?user_id=999",
@@ -408,7 +408,7 @@ def test_get_photos_wrong_sort_by_text_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}?sort_by=test",
@@ -428,7 +428,7 @@ def test_get_qr_code_success(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/{photo.id}/qr_code",
@@ -449,7 +449,7 @@ def test_get_qr_code_with_transform_id_success(
     photo.transformations = {"1": ["transformed_url.jpg"]}
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/{photo.id}/qr_code?transform_id=1",
@@ -470,7 +470,7 @@ def test_get_qr_code_with_invalid_transform_id_fail(
     photo.transformations = {"1": ["transformed_url.jpg"]}
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/{photo.id}/qr_code?transform_id=2",
@@ -490,7 +490,7 @@ def test_get_qr_code_with_invalid_photo_id_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{PHOTOS}/999/qr_code",
@@ -511,7 +511,7 @@ def test_transform_photo_success(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo.id}/transform",
@@ -538,7 +538,7 @@ def test_transform_photo_with_invalid_photo_id_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/999/transform",
@@ -560,7 +560,7 @@ def test_transform_photo_not_owner_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo.id}/transform",
@@ -582,7 +582,7 @@ def test_transform_photo_invalid_transform_fail(
     session.commit()
     session.add(photo)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo.id}/transform",
@@ -615,7 +615,7 @@ def test_rate_photo_success(
     session.refresh(photo_2)
     photo_2_id = photo_2.id
     user_id = 1
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo_2_id}/rate",
@@ -649,7 +649,7 @@ def test_rate_photo_with_invalid_photo_id_fail(
     access_token_user_standard,
 ):
 
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/999/rate",
@@ -674,7 +674,7 @@ def test_rate_photo_with_invalid_score_fail(
     session.refresh(photo_2)
     photo_2_id = photo_2.id
     rating_in_json["score"] = 10
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo_2_id}/rate",
@@ -704,7 +704,7 @@ def test_rate_photo_by_owner_fail(
     session.add(photo)
     session.commit()
     session.refresh(photo)
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{PHOTOS}/{photo.id}/rate",
@@ -731,7 +731,7 @@ def test_delete_rating_success(
     session.commit()
     photo_2_id = photo_2.id
     user_id = 1
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/{photo_2_id}/rate",
@@ -749,7 +749,7 @@ def test_delete_rating_with_invalid_photo_id_fail(
     client_app,
     access_token_user_standard,
 ):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{PHOTOS}/999/rate",

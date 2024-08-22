@@ -20,7 +20,7 @@ from src.conf.constants import (
 
 
 def test_create_tag_success(client_app, tag_in_json, access_token_user_standard):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{TAGS}/",
@@ -40,7 +40,7 @@ def test_create_tag_fail_already_exists(
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{TAGS}/",
@@ -60,7 +60,7 @@ def test_get_tags_no_sort_success(
     session.add(tag)
     session.add(tag_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{TAGS}/",
@@ -81,7 +81,7 @@ def test_get_tags_sort_success(
     session.add(tag)
     session.add(tag_2)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{TAGS}/?sort_by={TAGS_GET_ENUM[0]}",
@@ -109,7 +109,7 @@ def test_get_tag_by_id_success(session, client_app, tag, access_token_user_stand
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{TAGS}/{tag.id}",
@@ -128,7 +128,7 @@ def test_get_tag_by_id_fail_not_found(
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{TAGS}/999",
@@ -152,7 +152,7 @@ def test_update_tag_success(
     session.add(tag)
     session.commit()
     tag_in_json["name"] = "new_name"
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.put(
             f"{API}{TAGS}/{tag.id}",
@@ -190,7 +190,7 @@ def test_update_tag_fail_not_found(
     session.add(tag)
     session.commit()
     tag_in_json["name"] = "new_name"
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.put(
             f"{API}{TAGS}/999",
@@ -214,7 +214,7 @@ def test_update_tag_fail_lack_of_permission(
     session.add(tag)
     session.commit()
     tag_in_json["name"] = "new_name"
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.put(
             f"{API}{TAGS}/{tag.id}",
@@ -236,7 +236,7 @@ def test_delete_tag_success(
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{TAGS}/{tag.id}",
@@ -259,7 +259,7 @@ def test_delete_tag_fail_not_found(
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{TAGS}/999",
@@ -281,7 +281,7 @@ def test_delete_tag_fail_lack_of_permission(
     session.commit()
     session.add(tag)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{TAGS}/{tag.id}",

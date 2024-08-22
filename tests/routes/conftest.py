@@ -1,12 +1,11 @@
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 from fastapi import File
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi_limiter.depends import RateLimiter
 
-from main import app, lifespan
+from main import app
 from src.database.models import Base, User, Photo, Rating, Comment, Tag
 from src.database.dependencies import (
     get_user_repository,

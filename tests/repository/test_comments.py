@@ -1,16 +1,15 @@
 import unittest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from sqlalchemy.orm import Session
 
 from src.conf.constants import (
-    PHOTO_NOT_FOUND,
     COMMENT_NOT_FOUND,
     FORBIDDEN_FOR_NOT_OWNER,
 )
 from src.conf.errors import NotFoundError, ForbiddenError
 from src.repository.comments import PostgresCommentRepo
-from src.database.models import Comment, Photo, User
+from src.database.models import Comment
 
 
 class TestPostgresCommentRepo(unittest.IsolatedAsyncioTestCase):

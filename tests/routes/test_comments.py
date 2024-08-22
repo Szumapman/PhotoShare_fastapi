@@ -14,7 +14,6 @@ from src.conf.constants import (
     COMMENT_DELETED,
     FORBIDDEN_FOR_USER,
 )
-from src.schemas.comments import CommentUpdate
 from src.services.auth import auth_service
 
 
@@ -30,7 +29,7 @@ def test_create_comment_success(
     session.add(photo)
     session.commit()
     photo_id = photo.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{COMMENTS}/",
@@ -53,7 +52,7 @@ def test_create_comment_no_photo_fail(
 ):
     session.query(Photo).delete()
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{COMMENTS}/",
@@ -81,7 +80,7 @@ def test_get_comments_success(
     session.add(comment_2)
     session.commit()
     photo_id = photo.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{COMMENTS}/",
@@ -109,7 +108,7 @@ def test_get_comments_no_photo_fail(
     session.query(Photo).delete()
     session.query(Comment).delete()
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{COMMENTS}/",
@@ -136,7 +135,7 @@ def test_get_comment_success(
     session.commit()
     comment_id = comment.id
     photo_id = photo.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{COMMENTS}/{comment_id}",
@@ -158,7 +157,7 @@ def test_get_comment_no_comment_fail(
     session.query(Photo).delete()
     session.query(Comment).delete()
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{COMMENTS}/{comment.id}",
@@ -185,7 +184,7 @@ def test_update_comment_success(
     session.commit()
     comment_id = comment.id
     photo_id = photo.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{COMMENTS}/{comment_id}",
@@ -210,7 +209,7 @@ def test_update_comment_no_comment_fail(
     session.query(Photo).delete()
     session.query(Comment).delete()
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{COMMENTS}/999",
@@ -237,7 +236,7 @@ def test_update_comment_by_not_owner_fail(
     session.add(comment)
     session.commit()
     comment_id = comment.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.patch(
             f"{API}{COMMENTS}/{comment_id}",
@@ -272,7 +271,7 @@ def test_delete_comment_success(
     comment_content = comment.content
     comment_2_content = comment_2.content
     photo_id = photo.id
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{COMMENTS}/{comment_id}",
@@ -306,7 +305,7 @@ def test_delete_comment_by_not_admin_or_moderator_fail(
     session.add(photo)
     session.add(comment)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{COMMENTS}/{comment.id}",
@@ -323,7 +322,7 @@ def test_delete_comment_no_comment_fail(
     session.query(Photo).delete()
     session.query(Comment).delete()
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.delete(
             f"{API}{COMMENTS}/999",

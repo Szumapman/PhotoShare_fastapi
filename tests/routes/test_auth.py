@@ -23,7 +23,7 @@ from tests.routes.conftest import (
 
 
 def test_signup_success(client_app, user_in_standard_json):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_201_CREATED, response.text
@@ -35,7 +35,7 @@ def test_signup_success(client_app, user_in_standard_json):
 
 
 def test_signup_fail(client_app, user_in_standard_json):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(f"{API}{AUTH}/signup", json=user_in_standard_json)
         assert response.status_code == status.HTTP_409_CONFLICT, response.text
@@ -106,7 +106,7 @@ def test_login_fail_user_banned(session, client_app, user_in_standard_json):
 
 
 def test_refresh_token_success(client_app, tokens):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{AUTH}/refresh_token",
@@ -119,7 +119,7 @@ def test_refresh_token_success(client_app, tokens):
 
 def test_refresh_token_wrong_token(client_app, tokens):
     wrong_refresh_token = tokens["refresh_token"] + "_wrong"
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{AUTH}/refresh_token",
@@ -146,7 +146,7 @@ def test_refresh_token_no_user(
     user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
     session.delete(user)
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.get(
             f"{API}{AUTH}/refresh_token",
@@ -158,7 +158,7 @@ def test_refresh_token_no_user(
 
 
 def test_logout_success(client_app, access_token_user_standard):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{AUTH}/logout",
@@ -170,7 +170,7 @@ def test_logout_success(client_app, access_token_user_standard):
 
 
 def test_logout_fail_wrong_token(client_app, access_token_user_standard):
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{AUTH}/logout",
@@ -185,7 +185,7 @@ def test_logout_fail_user_already_logout(
     session, client_app, access_token_user_standard
 ):
     user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         client_app.post(
             f"{API}{AUTH}/logout",
@@ -204,7 +204,7 @@ def test_logout_fail_user_baned(session, client_app, access_token_user_standard)
     user = session.query(User).filter(User.email == EMAIL_STANDARD).first()
     user.is_active = False
     session.commit()
-    with patch.object(auth_service, "r") as mock_redis:
+    with patch.object(auth_service, "redis_connection") as mock_redis:
         mock_redis.get.return_value = None
         response = client_app.post(
             f"{API}{AUTH}/logout",
