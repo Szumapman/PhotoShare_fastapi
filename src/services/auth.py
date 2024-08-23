@@ -47,7 +47,7 @@ class Auth:
     def __init__(self, redis_connection=get_redis(db=0)):
         """
         Constructor.
-        
+
         :param redis_connection: Redis client
         :type redis_connection: Redis
         """
