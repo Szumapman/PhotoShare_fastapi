@@ -2,6 +2,8 @@
 This module contains all the dependencies for the application.
 """
 
+from redis.asyncio import Redis
+
 from src.database.db import get_db
 from src.repository.abstract import (
     AbstractUserRepo,
@@ -23,6 +25,7 @@ from src.services.abstract import AbstractPasswordHandler
 from src.services.password import BcryptPasswordHandler
 from src.services.photo_storage_provider import CloudinaryPhotoStorageProvider
 from src.services.qr_code import QrCodeProvider
+from src.conf.config import settings
 
 
 def get_password_handler() -> AbstractPasswordHandler:
@@ -93,3 +96,19 @@ def get_tag_repository() -> AbstractTagRepo:
     Function to get tag repository.
     """
     return PostgresTagRepo(next(get_db()))
+
+
+def get_redis(**kwargs) -> Redis:
+    """
+    Function to get Redis.
+
+    :param kwargs: redis connection parameters - except: host, port and password
+    :return: Redis instance
+    """
+    redis = Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password,
+        **kwargs,
+    )
+    return redis

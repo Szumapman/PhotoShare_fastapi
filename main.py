@@ -16,6 +16,7 @@ from src.conf.errors import (
     PhotoStorageProviderError,
     ConflictError,
 )
+from src.database.dependencies import get_redis
 
 
 @asynccontextmanager
@@ -26,10 +27,7 @@ async def lifespan(_: FastAPI):
     :param _: FastAPI app instance
     :type _: FastAPI
     """
-    redis_connection = await Redis(
-        host=settings.redis_host,
-        port=settings.redis_port,
-        password=settings.redis_password,
+    redis_connection = await get_redis(
         db=0,
         encoding="utf-8",
         decode_responses=True,

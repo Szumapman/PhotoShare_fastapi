@@ -5,8 +5,6 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
 import jwt
-from redis.asyncio import Redis
-
 
 from src.conf.config import settings
 from src.conf.errors import UnauthorizedError, ForbiddenError
@@ -25,18 +23,18 @@ from src.conf.constants import (
 )
 from src.database.models import User
 from src.repository.abstract import AbstractUserRepo
-from src.database.dependencies import get_user_repository
+from src.database.dependencies import get_user_repository, get_redis
 
 
 class Auth:
     """
     This class is used to authenticate users. It uses OAuth2PasswordBearer and JWT to authenticate users.
 
-    :param SECRET_KEY: secret key used to sign JWT
+    SECRET_KEY: secret key used to sign JWT
     :type SECRET_KEY: str
-    :param ALGORITHM: algorithm used to encrypt JWT
+    ALGORITHM: algorithm used to encrypt JWT
     :type ALGORITHM: str
-    :param oauth2_scheme: OAuth2PasswordBearer scheme
+    oauth2_scheme: OAuth2PasswordBearer scheme
     :type oauth2_scheme: OAuth2PasswordBearer
     :param redis_connection: Redis client
     :type redis_connection: Redis
@@ -45,14 +43,21 @@ class Auth:
     SECRET_KEY = settings.secret_key
     ALGORITHM = settings.algorithm
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{API}{AUTH}/login")
-    redis_connection = Redis(
-        host=settings.redis_host,
-        port=settings.redis_port,
-        password=settings.redis_password,
-        db=0,
-    )
 
-    async def update_user_in_redis(self, email: str, user: User):
+    def __init__(self, redis_connection=get_redis(db=0)):
+        """
+        Constructor.
+        
+        :param redis_connection: Redis client
+        :type redis_connection: Redis
+        """
+        self.redis_connection = redis_connection
+
+    async def update_user_in_redis(
+        self,
+        email: str,
+        user: User,
+    ):
         """
         This method is used to update user in Redis.
 
@@ -209,7 +214,10 @@ class Auth:
         except jwt.exceptions.PyJWTError:
             raise UnauthorizedError(detail=COULD_NOT_VALIDATE_CREDENTIALS)
 
-    async def delete_user_from_redis(self, email: str):
+    async def delete_user_from_redis(
+        self,
+        email: str,
+    ) -> None:
         """
         This method is used to delete user from redis.
 
