@@ -5,10 +5,17 @@ from enum import Enum
 from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
 
 from src.conf.constants import (
+    MIN_USERNAME_LENGTH,
     MAX_USERNAME_LENGTH,
     ROLE_ADMIN,
     ROLE_MODERATOR,
     ROLE_STANDARD,
+    MAX_PASSWORD_LENGTH,
+    TOO_LONG_PASSWORD_MESSAGE,
+    MIN_PASSWORD_LENGTH,
+    TOO_SHORT_PASSWORD_MESSAGE,
+    PASSWORD_PATTERN,
+    INVALID_PASSWORD_MESSAGE,
 )
 
 
@@ -55,7 +62,9 @@ class UserIn(BaseModel):
     """
 
     username: str = Field(
-        min_length=3, max_length=MAX_USERNAME_LENGTH, default="user name"
+        min_length=MIN_USERNAME_LENGTH,
+        max_length=MAX_USERNAME_LENGTH,
+        default="user name",
     )
     email: EmailStr = Field(max_length=150, default="user@example.com")
     password: str = Field(min_length=8, max_length=45, default="password")
@@ -69,14 +78,12 @@ class UserIn(BaseModel):
         :return: password
         :raise: ValueError if password is not valid
         """
-        if len(password) < 8:
-            raise ValueError("Password must be at least 8 characters")
-        elif len(password) > 45:
-            raise ValueError("Password must be less than 45 characters")
-        elif not re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,45}$", password):
-            raise ValueError(
-                "Password must contain at least one uppercase and lowercase letter, one digit and one special character"
-            )
+        if len(password) < MIN_PASSWORD_LENGTH:
+            raise ValueError(TOO_SHORT_PASSWORD_MESSAGE)
+        elif len(password) > MAX_PASSWORD_LENGTH:
+            raise ValueError(TOO_LONG_PASSWORD_MESSAGE)
+        elif not re.match(PASSWORD_PATTERN, password):
+            raise ValueError(INVALID_PASSWORD_MESSAGE)
         return password
 
 

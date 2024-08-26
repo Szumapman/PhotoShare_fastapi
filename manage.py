@@ -11,37 +11,39 @@ from validator_collection import validators
 from src.database.db import SessionLocal
 from src.database.dependencies import get_avatar_provider, get_password_handler
 from src.database.models import User, RefreshToken, LogoutAccessToken
-from src.conf.constants import MAX_USERNAME_LENGTH, ROLE_ADMIN
+from src.conf.constants import (
+    MAX_USERNAME_LENGTH,
+    TOO_LONG_USERNAME_MESSAGE,
+    ROLE_ADMIN,
+    MAX_PASSWORD_LENGTH,
+    TOO_LONG_PASSWORD_MESSAGE,
+    MIN_PASSWORD_LENGTH,
+    TOO_SHORT_PASSWORD_MESSAGE,
+    PASSWORD_PATTERN,
+    INVALID_PASSWORD_MESSAGE,
+    MIN_USERNAME_LENGTH,
+    TOO_SHORT_USERNAME_MESSAGE,
+)
 
 
 class UserNameValidator(Validator):
     def validate(self, document):
         text = document.text
         if len(text) > MAX_USERNAME_LENGTH:
-            raise ValidationError(
-                message=f"Username must be less than {MAX_USERNAME_LENGTH} characters long."
-            )
-        if len(text) < 3:
-            raise ValidationError(
-                message=f"Username must be at least 3 characters long."
-            )
+            raise ValidationError(message=TOO_LONG_USERNAME_MESSAGE)
+        if len(text) < MIN_USERNAME_LENGTH:
+            raise ValidationError(message=TOO_SHORT_USERNAME_MESSAGE)
 
 
 class PasswordValidator(Validator):
     def validate(self, document):
         text = document.text
-        if len(text) > 45:
-            raise ValidationError(
-                message=f"Password must be less than 45 characters long."
-            )
-        elif len(text) < 8:
-            raise ValidationError(
-                message=f"Password must be at least 8 characters long."
-            )
-        elif not re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,45}$", text):
-            raise ValidationError(
-                message="Password must contain at least one uppercase and lowercase letter, one digit and one special character"
-            )
+        if len(text) > MAX_PASSWORD_LENGTH:
+            raise ValidationError(message=TOO_LONG_PASSWORD_MESSAGE)
+        elif len(text) < MIN_PASSWORD_LENGTH:
+            raise ValidationError(message=TOO_SHORT_PASSWORD_MESSAGE)
+        elif not re.match(PASSWORD_PATTERN, text):
+            raise ValidationError(message=INVALID_PASSWORD_MESSAGE)
 
 
 def __get_data():

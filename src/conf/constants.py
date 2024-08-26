@@ -9,7 +9,26 @@ MAX_DESCRIPTION_LENGTH = 1000
 MAX_TAG_NAME_LENGTH = 50
 MAX_COMMENT_LENGTH = 1000
 MAX_USERNAME_LENGTH = 255
+TOO_LONG_USERNAME_MESSAGE = (
+    f"Username must be less than {MAX_USERNAME_LENGTH} characters long."
+)
+MIN_USERNAME_LENGTH = 3
+TOO_SHORT_USERNAME_MESSAGE = (
+    f"Username must be at least {MIN_USERNAME_LENGTH} characters long."
+)
 MAX_TAGS_AMOUNT = 5
+
+MAX_PASSWORD_LENGTH = 45
+TOO_LONG_PASSWORD_MESSAGE = (
+    f"Password must be less than {MAX_PASSWORD_LENGTH} characters long."
+)
+MIN_PASSWORD_LENGTH = 8
+TOO_SHORT_PASSWORD_MESSAGE = (
+    f"Password must be at least {MIN_PASSWORD_LENGTH} characters long."
+)
+PASSWORD_PATTERN = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,45}$"
+INVALID_PASSWORD_MESSAGE = "Password must contain at least one uppercase and lowercase letter, one digit and one special character"
+
 
 ROLE_ADMIN = "admin"
 ROLE_MODERATOR = "moderator"
