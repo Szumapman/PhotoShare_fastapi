@@ -49,9 +49,10 @@ async def create_tag(
     :return: confirmation of creation with tag info
     :rtype: TagInfo
     """
-    if await tag_repo.get_tag_by_name(tag_in.name):
+    tag_name = tag_in.name.strip().lower()
+    if await tag_repo.get_tag_by_name(tag_name):
         raise ConflictError(detail=TAG_ALREADY_EXISTS)
-    tag = await tag_repo.create_tag(tag_in.name)
+    tag = await tag_repo.create_tag(tag_name)
     return TagInfo(tag=TagOut.model_validate(tag), detail=TAG_CREATED)
 
 

@@ -29,6 +29,7 @@ class PostgresTagRepo(AbstractTagRepo):
         :return: tag or None if not found
         :rtype: Tag | None
         """
+        tag_name = tag_name.strip().lower()
         return self.db.query(Tag).filter(Tag.name == tag_name).first()
 
     async def create_tag(self, tag_name: str) -> Tag:
@@ -40,6 +41,7 @@ class PostgresTagRepo(AbstractTagRepo):
         :return: created tag
         :rtype: Tag
         """
+        tag_name = tag_name.strip().lower()
         tag = Tag(name=tag_name)
         self.db.add(tag)
         self.db.commit()
@@ -61,7 +63,6 @@ class PostgresTagRepo(AbstractTagRepo):
         :return: list of tags
         :rtype: list[Type[Tag]]
         """
-        print(sort_by)
         if sort_by is None:
             return self.db.query(Tag).offset(skip).limit(limit).all()
         else:
