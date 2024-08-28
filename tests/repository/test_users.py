@@ -135,6 +135,23 @@ class TestUsers(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.role, ROLE_STANDARD)
         self.assertIsInstance(result, User)
 
+    async def test_create_admin_success(self):
+        name = "admin"
+        email = "admin@email.com"
+        password = "P@ssword1!"
+
+        result = await self.user_repo.create_admin(
+            name,
+            email,
+            password,
+            avatar=self.avatar,
+        )
+        self.assertEqual(result.username, name)
+        self.assertEqual(result.email, email)
+        self.assertEqual(result.avatar, self.avatar)
+        self.assertEqual(result.role, ROLE_ADMIN)
+        self.assertIsInstance(result, User)
+
     async def test_update_user_success(self):
         self.db.query().filter().first.return_value = self.user_admin
         result = await self.user_repo.update_user(
