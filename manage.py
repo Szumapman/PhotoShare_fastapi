@@ -9,12 +9,15 @@ from prompt_toolkit import prompt
 from validator_collection import validators
 
 from src.database.db import SessionLocal
-from src.database.dependencies import get_avatar_provider, get_password_handler
-from src.database.models import User, RefreshToken, LogoutAccessToken
+from src.database.dependencies import (
+    get_avatar_provider,
+    get_password_handler,
+    get_user_repository,
+)
+from src.database.models import RefreshToken, LogoutAccessToken
 from src.conf.constants import (
     MAX_USERNAME_LENGTH,
     TOO_LONG_USERNAME_MESSAGE,
-    ROLE_ADMIN,
     MAX_PASSWORD_LENGTH,
     TOO_LONG_PASSWORD_MESSAGE,
     MIN_PASSWORD_LENGTH,
@@ -24,6 +27,8 @@ from src.conf.constants import (
     MIN_USERNAME_LENGTH,
     TOO_SHORT_USERNAME_MESSAGE,
 )
+from src.repository.abstract import AbstractUserRepo
+from src.services.abstract import AbstractAvatarProvider, AbstractPasswordHandler
 
 
 class UserNameValidator(Validator):
@@ -71,19 +76,21 @@ def __get_data():
     return username, email, password1
 
 
-async def __add_admin_to_db(username, email, password):
-    avatar_provider = get_avatar_provider()
+async def __add_admin_to_db(
+    username,
+    email,
+    password,
+    user_repo: AbstractUserRepo = get_user_repository(),
+    password_handler: AbstractPasswordHandler = get_password_handler(),
+    avatar_provider: AbstractAvatarProvider = get_avatar_provider(),
+):
     avatar = avatar_provider.get_avatar(email, 255)
-    db = SessionLocal()
-    user = User(
-        username=username,
+    await user_repo.create_admin(
+        name=username,
         email=email,
-        password=get_password_handler().get_password_hash(password),
+        hashed_password=password_handler.get_password_hash(password),
         avatar=avatar,
-        role=ROLE_ADMIN,
     )
-    db.add(user)
-    db.commit()
 
 
 async def __delete_exp_tokens(token_type: str):

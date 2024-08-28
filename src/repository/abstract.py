@@ -77,6 +77,27 @@ class AbstractUserRepo(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def create_admin(
+        self, name: str, email: str, hashed_password: str, avatar: str
+    ) -> User:
+        """
+        Creates new admin user in database
+
+        This method should be used only locally, f.e. with manage.py file.
+
+        :param name: name of user
+        :type name: str
+        :param email: email of user
+        :type email: str
+        :param hashed_password: hashed password of user
+        :type hashed_password: str
+        :param avatar: avatar url
+        :type avatar: str
+        :return: created user
+        """
+        pass
+
+    @abc.abstractmethod
     async def update_user(self, new_user_data: UserIn, user_id: int) -> User:
         """
         Updates user in database

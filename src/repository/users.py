@@ -104,6 +104,37 @@ class PostgresUserRepo(AbstractUserRepo):
         self.db.refresh(new_user)
         return new_user
 
+    async def create_admin(
+        self, name: str, email: str, hashed_password: str, avatar: str
+    ) -> User:
+        """
+        Creates new admin user in database
+
+        This method should be used only locally, f.e. with manage.py file.
+
+        :param name: new admin name
+        :type name: str
+        :param email: admin email
+        :type email: str
+        :param hashed_password: hashed password
+        :type hashed_password: str
+        :param avatar: avatar url
+        :type avatar: str
+        :return: created admin
+        :rtype: User
+        """
+        new_admin = User(
+            username=name,
+            email=email,
+            password=hashed_password,
+            role=ROLE_ADMIN,
+            avatar=avatar,
+        )
+        self.db.add(new_admin)
+        self.db.commit()
+        self.db.refresh(new_admin)
+        return new_admin
+
     async def update_user(self, new_user_data: UserIn, user_id: int) -> User:
         """
         Updates user in database
