@@ -4,9 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_limiter import FastAPILimiter
-from redis.asyncio import Redis
 
-from src.conf.config import settings
 from src.routes import auth, users, photos, comments, tags
 from src.conf.constants import API
 from src.conf.errors import (
