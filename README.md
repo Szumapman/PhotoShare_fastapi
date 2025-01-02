@@ -21,14 +21,16 @@ I have created the project as a solution to the final assignment for one of the 
 
 ### Links to test instance and documentation
 > [!CAUTION]
+> The test instance is temporarily disabled. Updated links will be provided after the application is moved to the new server.
+>  
 > This is a test instance, which can be turned off or moved to another address at any time, and all data can be deleted. Don't give any true personal information there, or upload relevant and/or private photos or images. Current addresses of the test instance and documentation will be published here.
 #### Here you can test the app in action:
 * base server address (to test f.e. in [Postman](https://www.postman.com/)):
-  * [https://divine-shaun-goit-project-3160ff2e.koyeb.app/](https://divine-shaun-goit-project-3160ff2e.koyeb.app/)
+  * temporarily disabled
 * you can also check [Swagger](https://swagger.io/) doc:
-  * [PhotoShare-fastapi-Swagger](https://divine-shaun-goit-project-3160ff2e.koyeb.app/docs#/)
+  * temporarily disabled
 * or [ReDoc](https://redocly.github.io/redoc/):
-  * [PhotoShare-fastapi-ReDoc](https://divine-shaun-goit-project-3160ff2e.koyeb.app/redoc)
+  * temporarily disabled
 
 #### Here you can see the documentation  (created using [Sphinx](https://www.sphinx-doc.org/en/master/)):
 * [PhotoShare-fastapi-doc](https://photoshare-fastapi-docs.tiiny.site/)
